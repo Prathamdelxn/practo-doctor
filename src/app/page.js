@@ -9,6 +9,7 @@ import DoctorsSection from '@/components/DoctorsSection';
 // import AppDownload from '@/components/AppDownload';
 import Footer from '@/components/Footer';
 import ClinicsPage from '@/components/NearbyClinics';
+import Articles from '@/components/Articles';
 
 export default function Home() {
   return (
@@ -25,6 +26,8 @@ export default function Home() {
         <Services />
         <DoctorsSection />
         <ClinicsPage/>
+        <Articles/>
+        
         {/* <HospitalsSection /> */}
         {/* <AppDownload /> */}
       </main>
