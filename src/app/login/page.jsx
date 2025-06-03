@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/context/AuthContext';
 import { 
   EyeIcon, 
   EyeSlashIcon, 
@@ -16,6 +18,8 @@ import {
 import Image from 'next/image';
 
 const AuthPage = () => {
+  const { login } = useAuth();
+    const router = useRouter()
   const [authMode, setAuthMode] = useState('login'); // 'login' or 'signup'
   const [userType, setUserType] = useState('doctor'); // 'doctor' or 'admin'
   const [showPassword, setShowPassword] = useState(false);
@@ -35,9 +39,112 @@ const AuthPage = () => {
       .required('Required'),
   });
 
-  const handleSubmit = (values) => {
-    console.log(`${authMode === 'login' ? 'Logging in' : 'Signing up'} as ${userType}:`, values);
+  // const handleSubmit = (values) => {
+  //    const payload = {
+  //   ...values,
+  //   role: userType, // Send role info
+  // };
+  //   console.log(`${authMode === 'login' ? 'Logging in' : 'Signing up'} as ${userType}:`, payload);
+  // };
+
+
+//   const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+//   const payload = {
+//     name: values.name,
+//     email: values.email,
+//     password: values.password,
+//     role: userType, // 'doctor' or 'admin'
+//   };
+
+//   try {
+//     const res = await fetch("http://localhost:3001/api/admin/auth/signup", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//       },
+//       body: JSON.stringify(payload),
+//     });
+
+//     const data = await res.json();
+
+//     if (res.ok) {
+//       console.log("Signup successful:", data);
+//       alert("Signup successful");
+//       resetForm();
+//     } else {
+//       console.error("Signup failed:", data);
+//       alert(data.error || "Signup failed");
+//     }
+//   } catch (error) {
+//     console.error("Error occurred:", error);
+//     alert("An error occurred. Please try again.");
+//   } finally {
+//     setSubmitting(false);
+//   }
+// };
+
+const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+  const payload = {
+    name: values.name,
+    email: values.email,
+    password: values.password,
+    role: userType, // 'doctor' or 'admin'
   };
+
+  try {
+    const apiBase = "http://localhost:3001/api";
+    const endpoint =
+      authMode === "signup"
+        ? `${apiBase}/${userType}/auth/signup`
+        : `${apiBase}/${userType}/auth/login`;
+
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    if (res.ok) {
+      console.log(`${authMode === "signup" ? "Signup" : "Login"} successful:`, data);
+      if (authMode === "login") {
+  login(data.token, data.user);
+
+  resetForm();
+  console.log(userType);
+  if(userType=="doctor"){
+       router.push("/doctor-dashboard");
+
+  }
+  else{
+   router.push("/admin");
+   
+  }
+ 
+} else {
+
+  resetForm();
+}
+
+      alert(`${authMode === "signup" ? "Signup" : "Login"} successful`);
+     
+      resetForm();
+    } else {
+      console.error("Failed:", data);
+      alert(data.error || "Something went wrong");
+    }
+  } catch (error) {
+    console.error("Error occurred:", error);
+    alert("An error occurred. Please try again.");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   return (
     <div className="min-h-screen flex bg-white">
@@ -252,7 +359,7 @@ const AuthPage = () => {
           </Formik>
 
           <div className="mt-6 text-center text-sm text-gray-500">
-            {authMode === 'login' ? (
+            {/* {authMode === 'login' ? (
               <>
                 Don’t have an account?{' '}
                 <button 
@@ -272,7 +379,31 @@ const AuthPage = () => {
                   Login
                 </button>
               </>
-            )}
+            )} */}
+            {authMode === 'login' ? (
+  userType === 'admin' ? (
+    <>
+      Don’t have an account?{' '}
+      <button 
+        onClick={() => setAuthMode('signup')} 
+        className="font-medium text-blue-600 hover:text-blue-500"
+      >
+        Sign up
+      </button>
+    </>
+  ) : null
+) : (
+  <>
+    Already have an account?{' '}
+    <button 
+      onClick={() => setAuthMode('login')} 
+      className="font-medium text-blue-600 hover:text-blue-500"
+    >
+      Login
+    </button>
+  </>
+)}
+
           </div>
         </motion.div>
       </div>

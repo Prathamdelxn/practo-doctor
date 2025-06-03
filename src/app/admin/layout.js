@@ -1,5 +1,7 @@
 'use client'
 import { useState } from 'react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   Users, 
   Home, 
@@ -16,7 +18,18 @@ import {
 
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+   const router = useRouter();
+    useEffect(() => {
+    const token = localStorage.getItem('token')
+    const user =localStorage.getItem('user')
+    console.log(user)
+    if (!token && !user.role=="admin") {
+      router.push('/login') // 👈 Redirect if token not found
+    }
+  }, [router])
+const user = JSON.parse(localStorage.getItem('user'));
 
+ console.log("asdf",user)
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Doctors', href: '/admin/doctors', icon: Users },
@@ -82,14 +95,25 @@ export default function DashboardLayout({ children }) {
                 <span className="text-white font-semibold text-sm">AD</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Admin User</p>
-                <p className="text-xs text-gray-500 truncate">admin@hospital.com</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+                <p className="text-xs text-gray-500 truncate">{user.email}</p>
               </div>
             </div>
-            <button className="mt-2 w-full flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition-colors">
+            {/* <button className="mt-2 w-full flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition-colors">
               <LogOut className="mr-2 h-4 w-4" />
               Sign out
-            </button>
+            </button> */}
+            <button
+  onClick={() => {
+    localStorage.removeItem('token'); // 🔐 Clear the token
+    router.push('/login');      // 🚀 Redirect to login
+  }}
+  className="mt-2 w-full flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition-colors"
+>
+  <LogOut className="mr-2 h-4 w-4" />
+  Sign out
+</button>
+
           </div>
         </div>
       </div>

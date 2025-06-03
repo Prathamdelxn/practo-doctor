@@ -54,7 +54,8 @@ export default function Dashboard() {
         </div>
         <div className="flex items-center space-x-2 text-sm text-gray-500">
           <Calendar className="h-4 w-4" />
-          <span>Last updated: {new Date().toLocaleDateString()}</span>
+          {/* <span>Last updated: {new Date().toLocaleDateString()}</span> */}
+          <span>Last updated: 11 May 2025</span>
         </div>
       </div>
 
