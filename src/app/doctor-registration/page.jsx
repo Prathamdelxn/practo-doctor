@@ -1637,6 +1637,7 @@ export default function DoctorSignup() {
     lastName: '',
     profileImage: null, // local preview URL
   profileImageUrl: '',
+   consultantFee: '',
     dateOfBirth: '',
     gender: '',
     email: '',
@@ -1792,6 +1793,7 @@ const handleFileChange = async (e) => {
       if (!formData.specialty) newErrors.specialty = 'Specialty is required'
       if (!formData.experience.trim()) newErrors.experience = 'Experience is required'
       if (!formData.hospital.trim()) newErrors.hospital = 'Hospital/clinic is required'
+       if (!formData.consultantFee) newErrors.consultantFee = 'Consultation fee is required'
       if (!formData.hospitalNumber.trim()) newErrors.hospitalNumber = 'Hospital contact number is required'
     } else if (step === 2) {
       // Availability
@@ -1891,6 +1893,7 @@ const cleanedData={
   firstName:formData.firstName,
   lastName:formData.lastName,
   dateOfBirth:formData.dateOfBirth,
+  consultantFee:formData.consultantFee,
   profileImage:formData.profileImageUrl,
   gender:formData.gender,
   email:formData.email,
@@ -2435,6 +2438,27 @@ const cleanedData={
                             </p>
                           )}
                         </div>
+                        <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">Consultation Fee (₹)</label>
+      <div className="relative">
+        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <span className="text-gray-500">₹</span>
+        </div>
+        <input
+          type="number"
+          min="0"
+          value={formData.consultantFee}
+          onChange={(e) => handleInputChange('consultantFee', e.target.value)}
+          className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+          placeholder="e.g. 500"
+        />
+      </div>
+      {errors.consultantFee && (
+    <p className="text-red-500 text-xs mt-1 flex items-center">
+      <AlertCircle className="h-3 w-3 mr-1" /> {errors.consultantFee}
+    </p>
+  )}
+    </div>
                       </div>
                     )}
 
@@ -2645,6 +2669,12 @@ const cleanedData={
                                 {formData.hospitalAddress || 'Not provided'}
                               </p>
                             </div>
+                            <div>
+          <p className="text-gray-500">Consultation Fee</p>
+          <p className="font-medium">
+            {formData.consultantFee ? `₹${formData.consultantFee}` : 'Not specified'}
+          </p>
+        </div>
                           </div>
                         </div>
 

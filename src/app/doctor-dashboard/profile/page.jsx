@@ -1,6 +1,169 @@
-'use client'
+// 'use client'
+// import { useDoctor } from '@/context/DoctorContext';
+// import React, { useState } from 'react';
+// import { 
+//   User, 
+//   Mail, 
+//   Phone, 
+//   MapPin, 
+//   Calendar, 
+//   Award, 
+//   BookOpen, 
+//   Clock, 
+//   Star, 
+//   Edit, 
+//   Save, 
+//   X, 
+//   Camera,
+//   Stethoscope,
+//   GraduationCap,
+//   Building,
+//   Users,
+//   Activity,
+//   FileText
+// } from 'lucide-react';
 
-import React, { useState } from 'react';
+// const DoctorProfilePage = () => {
+//     const { doctor, loading } = useDoctor();
+//   const [isEditing, setIsEditing] = useState(false);
+//   const [activeTab, setActiveTab] = useState('overview');
+//   console.log("data",doctor.doctor);
+//   const [doctorData, setDoctorData] = useState({
+//     personalInfo: {
+//       firstName: doctor.doctor.firstName,
+//       lastName: doctor.doctor.lastName,
+//       title: 'MD, MBBS, FRCS',
+//       specialty:  doctor.doctor.specialty,
+//       subSpecialty: 'Interventional Cardiology',
+//       email:  doctor.doctor.email,
+//       phone:  doctor.doctor.phone,
+//       address:  doctor.doctor.hospitalAddress,
+//       dateOfBirth:  doctor.doctor.dateOfBirth,
+//       gender: 'Female',
+//       languages: ['English', 'Spanish', 'French'],
+//       profileImage:  doctor.doctor.profileImage
+//     },
+//     professionalInfo: {
+//       licenseNumber:  doctor.doctor.licenseNumber,
+//       yearsOfExperience:  doctor.doctor.experience,
+//       currentHospital: doctor.doctor.hospital,
+//       department: 'Cardiology Department',
+//       position:  doctor.doctor.specialty,
+//       workingHours: 'Monday - Friday: 9:00 AM - 5:00 PM',
+//       emergencyAvailable: true,
+//       consultationFee: doctor.doctor.consultantFee
+//     },
+//     education: [
+//       {
+//         degree: 'MD in Cardiology',
+//         institution: 'Harvard Medical School',
+//         year: '2015',
+//         grade: 'Magna Cum Laude'
+//       },
+//       {
+//         degree: 'MBBS',
+//         institution: 'Johns Hopkins University',
+//         year: '2011',
+//         grade: 'First Class Honors'
+//       }
+//     ],
+//     certifications: [
+//       {
+//         name: 'Board Certified Cardiologist',
+//         issuedBy: 'American Board of Cardiology',
+//         year: '2016',
+//         validUntil: '2026'
+//       },
+//       {
+//         name: 'Advanced Cardiac Life Support (ACLS)',
+//         issuedBy: 'American Heart Association',
+//         year: '2023',
+//         validUntil: '2025'
+//       }
+//     ],
+//     achievements: [
+//       'Best Doctor Award 2023 - Metropolitan Medical Center',
+//       'Published 25+ research papers in peer-reviewed journals',
+//       'Speaker at International Cardiology Conference 2023',
+//       'Leadership Award for Patient Care Excellence 2022'
+//     ],
+//     statistics: {
+//       totalPatients: 1250,
+//       successfulProcedures: 450,
+//       yearsExperience: 12,
+//       rating: 4.9,
+//       reviews: 186
+//     }
+//   });
+
+//   const [formData, setFormData] = useState(doctorData);
+
+//   const handleEdit = () => {
+//     setIsEditing(true);
+//     setFormData({ ...doctorData });
+//   };
+
+//   const handleSave = () => {
+//     setDoctorData({ ...formData });
+//     setIsEditing(false);
+//   };
+
+//   const handleCancel = () => {
+//     setFormData({ ...doctorData });
+//     setIsEditing(false);
+//   };
+
+//   const handleInputChange = (section, field, value) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [section]: {
+//         ...prev[section],
+//         [field]: value
+//       }
+//     }));
+//   };
+
+//   const handleArrayInputChange = (section, index, field, value) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       [section]: prev[section].map((item, i) => 
+//         i === index ? { ...item, [field]: value } : item
+//       )
+//     }));
+//   };
+
+//   const TabButton = ({ id, label, icon: Icon }) => (
+//     <button
+//       onClick={() => setActiveTab(id)}
+//       className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+//         activeTab === id
+//           ? 'bg-blue-100 text-blue-700 border border-blue-200'
+//           : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+//       }`}
+//     >
+//       <Icon className="w-4 h-4" />
+//       {label}
+//     </button>
+//   );
+
+//   const InfoCard = ({ title, children, icon: Icon }) => (
+//     <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+//       <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+//         <div className="flex items-center gap-2">
+//           <Icon className="w-5 h-5 text-blue-600" />
+//           <h3 className="font-semibold text-gray-900">{title}</h3>
+//         </div>
+//       </div>
+//       <div className="p-6">{children}</div>
+//     </div>
+//   );
+
+//   return (
+//     <div className="min-h-screen bg-gray-50">
+
+'use client'
+import { useDoctor } from '@/context/DoctorContext';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Mail, 
@@ -24,78 +187,84 @@ import {
 } from 'lucide-react';
 
 const DoctorProfilePage = () => {
+  const { doctor, loading } = useDoctor();
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
-  
-  const [doctorData, setDoctorData] = useState({
-    personalInfo: {
-      firstName: 'Dr. Sarah',
-      lastName: 'Johnson',
-      title: 'MD, MBBS, FRCS',
-      specialty: 'Cardiologist',
-      subSpecialty: 'Interventional Cardiology',
-      email: 'dr.sarah.johnson@hospital.com',
-      phone: '+1-555-0123',
-      address: '123 Medical Center Drive, New York, NY 10001',
-      dateOfBirth: '1985-03-15',
-      gender: 'Female',
-      languages: ['English', 'Spanish', 'French'],
-      profileImage: null
-    },
-    professionalInfo: {
-      licenseNumber: 'NY123456789',
-      yearsOfExperience: 12,
-      currentHospital: 'Metropolitan Medical Center',
-      department: 'Cardiology Department',
-      position: 'Senior Consultant',
-      workingHours: 'Monday - Friday: 9:00 AM - 5:00 PM',
-      emergencyAvailable: true,
-      consultationFee: 250
-    },
-    education: [
-      {
-        degree: 'MD in Cardiology',
-        institution: 'Harvard Medical School',
-        year: '2015',
-        grade: 'Magna Cum Laude'
-      },
-      {
-        degree: 'MBBS',
-        institution: 'Johns Hopkins University',
-        year: '2011',
-        grade: 'First Class Honors'
-      }
-    ],
-    certifications: [
-      {
-        name: 'Board Certified Cardiologist',
-        issuedBy: 'American Board of Cardiology',
-        year: '2016',
-        validUntil: '2026'
-      },
-      {
-        name: 'Advanced Cardiac Life Support (ACLS)',
-        issuedBy: 'American Heart Association',
-        year: '2023',
-        validUntil: '2025'
-      }
-    ],
-    achievements: [
-      'Best Doctor Award 2023 - Metropolitan Medical Center',
-      'Published 25+ research papers in peer-reviewed journals',
-      'Speaker at International Cardiology Conference 2023',
-      'Leadership Award for Patient Care Excellence 2022'
-    ],
-    statistics: {
-      totalPatients: 1250,
-      successfulProcedures: 450,
-      yearsExperience: 12,
-      rating: 4.9,
-      reviews: 186
-    }
-  });
+  const [doctorData, setDoctorData] = useState(null);
 
-  const [formData, setFormData] = useState(doctorData);
+  useEffect(() => {
+    if (!loading && doctor?.doctor) {
+      setDoctorData({
+        personalInfo: {
+          firstName: doctor.doctor.firstName || '',
+          lastName: doctor.doctor.lastName || '',
+          title: 'MD, MBBS, FRCS',
+          specialty: doctor.doctor.specialty || '',
+          subSpecialty: doctor.doctor.supSpeciality || 'Interventional Cardiology',
+          email: doctor.doctor.email || '',
+          phone: doctor.doctor.phone || '',
+          address: doctor.doctor.hospitalAddress || '',
+          dateOfBirth: doctor.doctor.dateOfBirth || '',
+          gender: doctor.doctor.gender,
+          workingDays:doctor.doctor.available.days || [],
+          profileImage: doctor.doctor.profileImage || ''
+        },
+        professionalInfo: {
+          licenseNumber: doctor.doctor.licenseNumber || '',
+          yearsOfExperience: doctor.doctor.experience || 0,
+          currentHospital: doctor.doctor.hospital || '',
+          department: doctor.doctor.specialty,
+          position: doctor.doctor.specialty || '',
+          workingHours:doctor.doctor.available.time || 'Monday - Friday: 9:00 AM - 5:00 PM',
+          emergencyAvailable: true,
+          consultationFee: doctor.doctor.consultantFee || 0
+        },
+        education: [
+          {
+            degree: 'MD in Cardiology',
+            institution: 'Harvard Medical School',
+            year: '2015',
+            grade: 'Magna Cum Laude'
+          },
+          {
+            degree: 'MBBS',
+            institution: 'Johns Hopkins University',
+            year: '2011',
+            grade: 'First Class Honors'
+          }
+        ],
+        certifications: [
+          {
+            name: 'Board Certified Cardiologist',
+            issuedBy: 'American Board of Cardiology',
+            year: '2016',
+            validUntil: '2026'
+          },
+          {
+            name: 'Advanced Cardiac Life Support (ACLS)',
+            issuedBy: 'American Heart Association',
+            year: '2023',
+            validUntil: '2025'
+          }
+        ],
+        achievements: [
+          'Best Doctor Award 2023 - Metropolitan Medical Center',
+          'Published 25+ research papers in peer-reviewed journals',
+          'Speaker at International Cardiology Conference 2023',
+          'Leadership Award for Patient Care Excellence 2022'
+        ],
+        statistics: {
+          totalPatients: 1250,
+          successfulProcedures: 450,
+          yearsExperience: 12,
+          rating: 4.9,
+          reviews: 186
+        }
+      });
+    }
+  }, [doctor, loading]);
+
+  const [formData, setFormData] = useState(null);
 
   const handleEdit = () => {
     setIsEditing(true);
@@ -157,6 +326,17 @@ const DoctorProfilePage = () => {
     </div>
   );
 
+  if (loading || !doctorData) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading doctor profile...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -183,8 +363,8 @@ const DoctorProfilePage = () => {
                 )}
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {doctorData.personalInfo.firstName} {doctorData.personalInfo.lastName}
+                <h1 className="text-2xl font-bold text-gray-900 capitalize">
+                  Dr. {doctorData.personalInfo.firstName} {doctorData.personalInfo.lastName}
                 </h1>
                 <p className="text-gray-600">{doctorData.personalInfo.title}</p>
                 <p className="text-blue-600 font-medium">{doctorData.personalInfo.specialty}</p>
@@ -301,7 +481,7 @@ const DoctorProfilePage = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       ) : (
-                        <p className="text-gray-900">{doctorData.personalInfo.firstName}</p>
+                        <p className="text-gray-900 capitalize">{doctorData.personalInfo.firstName}</p>
                       )}
                     </div>
                     <div>
@@ -314,7 +494,7 @@ const DoctorProfilePage = () => {
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       ) : (
-                        <p className="text-gray-900">{doctorData.personalInfo.lastName}</p>
+                        <p className="text-gray-900 capitalize">{doctorData.personalInfo.lastName}</p>
                       )}
                     </div>
                   </div>
@@ -385,9 +565,9 @@ const DoctorProfilePage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Languages</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Working Days</label>
                     <div className="flex flex-wrap gap-2">
-                      {doctorData.personalInfo.languages.map((language, index) => (
+                      {doctorData.personalInfo.workingDays.map((language, index) => (
                         <span
                           key={index}
                           className="px-2 py-1 bg-blue-100 text-blue-800 text-sm rounded-full"
@@ -426,7 +606,7 @@ const DoctorProfilePage = () => {
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       />
                     ) : (
-                      <p className="text-gray-900">{doctorData.professionalInfo.currentHospital}</p>
+                      <p className="text-gray-900 capitalize">{doctorData.professionalInfo.currentHospital}</p>
                     )}
                   </div>
 
@@ -444,7 +624,7 @@ const DoctorProfilePage = () => {
                     )}
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Position</label>
                     {isEditing ? (
                       <input
@@ -456,7 +636,7 @@ const DoctorProfilePage = () => {
                     ) : (
                       <p className="text-gray-900">{doctorData.professionalInfo.position}</p>
                     )}
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Working Hours</label>
@@ -489,12 +669,12 @@ const DoctorProfilePage = () => {
                       </div>
                     ) : (
                       <p className="text-gray-900 text-lg font-semibold text-green-600">
-                        ${doctorData.professionalInfo.consultationFee}
+                        ₹ {doctorData.professionalInfo.consultationFee}
                       </p>
                     )}
                   </div>
 
-                  <div className="flex items-center justify-between">
+                  {/* <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-gray-700">Emergency Available</span>
                     <div className={`px-3 py-1 rounded-full text-sm font-medium ${
                       doctorData.professionalInfo.emergencyAvailable 
@@ -503,7 +683,7 @@ const DoctorProfilePage = () => {
                     }`}>
                       {doctorData.professionalInfo.emergencyAvailable ? 'Yes' : 'No'}
                     </div>
-                  </div>
+                  </div> */}
                 </div>
               </InfoCard>
             </div>

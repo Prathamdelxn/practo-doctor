@@ -9,7 +9,7 @@ export const DoctorProvider = ({ children }) => {
 
   const fetchDoctorInfo = async (id) => {
     try {
-      const res = await fetch(`/api/doctor/fetchinfo/${id}`);
+      const res = await fetch(`https://practo-backend.vercel.app/api/doctor/fetch-by-id/${id}`);
       if (!res.ok) throw new Error('Failed to fetch doctor info');
       const data = await res.json();
       setDoctor(data);
@@ -24,7 +24,7 @@ export const DoctorProvider = ({ children }) => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
       const user = JSON.parse(savedUser);
-      fetchDoctorInfo(user._id); // assumes user has _id after login
+      fetchDoctorInfo(user.id); // assumes user has _id after login
     } else {
       setLoading(false);
     }

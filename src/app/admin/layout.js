@@ -124,7 +124,8 @@ useEffect(() => {
             </button> */}
             <button
   onClick={() => {
-    localStorage.removeItem('token'); // 🔐 Clear the token
+    localStorage.removeItem('token'); 
+    localStorage.removeItem('user');// 🔐 Clear the token
     router.push('/login');      // 🚀 Redirect to login
   }}
   className="mt-2 w-full flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition-colors"
