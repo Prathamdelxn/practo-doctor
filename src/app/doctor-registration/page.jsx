@@ -1907,7 +1907,7 @@ const cleanedData={
   available:formData.available
 }
   try {
-    const response = await fetch('http://localhost:3001/api/doctor/register', {
+    const response = await fetch('https://practo-backend.vercel.app/api/doctor/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
