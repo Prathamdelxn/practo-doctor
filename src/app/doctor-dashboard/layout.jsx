@@ -764,9 +764,10 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState ,useEffect} from 'react';
+
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname ,useRouter} from 'next/navigation';
 import { 
   Stethoscope, 
   Calendar, 
@@ -786,6 +787,30 @@ import {
 } from 'lucide-react';
 
 export default function ClinicDashboardLayout({ children }) {
+    const router =useRouter();
+    const [userData,setUserData]=useState(null);
+    useEffect(() => {
+      const token = localStorage.getItem('token')
+      const userStr = localStorage.getItem('user')
+      
+      if (!token || !userStr) {
+        router.push('/login')
+        return
+      }
+      
+      try {
+        const user = JSON.parse(userStr)
+        setUserData(user);
+        console.log(user)
+        if (user.role !== "doctor") {
+          router.push('/login')
+        }
+      } catch (error) {
+        console.error('Invalid user data in localStorage')
+        router.push('/login')
+      }
+    }, [router])
+    console.log("userdata",userData)
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const pathname = usePathname();

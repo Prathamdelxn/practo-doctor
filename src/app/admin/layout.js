@@ -19,14 +19,33 @@ import {
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
    const router = useRouter();
-    useEffect(() => {
-    const token = localStorage.getItem('token')
-    const user =localStorage.getItem('user')
-    console.log(user)
-    if (!token && !user.role=="admin") {
-      router.push('/login') // 👈 Redirect if token not found
+//     useEffect(() => {
+//     const token = localStorage.getItem('token')
+//     const user =localStorage.getItem('user')
+//     console.log(user)
+//     if (!token && !user.role=="admin") {
+//       router.push('/login') // 👈 Redirect if token not found
+//     }
+//   }, [router])
+useEffect(() => {
+  const token = localStorage.getItem('token')
+  const userStr = localStorage.getItem('user')
+  
+  if (!token || !userStr) {
+    router.push('/login')
+    return
+  }
+  
+  try {
+    const user = JSON.parse(userStr)
+    if (user.role !== "admin") {
+      router.push('/login')
     }
-  }, [router])
+  } catch (error) {
+    console.error('Invalid user data in localStorage')
+    router.push('/login')
+  }
+}, [router])
 const user = JSON.parse(localStorage.getItem('user'));
 
  console.log("asdf",user)
