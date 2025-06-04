@@ -46,9 +46,9 @@ useEffect(() => {
     router.push('/login')
   }
 }, [router])
-const user = JSON.parse(localStorage.getItem('user'));
+// const user = JSON.parse(localStorage.getItem('user'));
 
- console.log("asdf",user)
+//  console.log("asdf",user)
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: Home },
     { name: 'Doctors', href: '/admin/doctors', icon: Users },
@@ -114,8 +114,8 @@ const user = JSON.parse(localStorage.getItem('user'));
                 <span className="text-white font-semibold text-sm">AD</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                <p className="text-sm font-medium text-gray-900 truncate">Prathmesh</p>
+                <p className="text-xs text-gray-500 truncate">prathameshgodage@gmail.com</p>
               </div>
             </div>
             {/* <button className="mt-2 w-full flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition-colors">
