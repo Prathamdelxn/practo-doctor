@@ -22,7 +22,7 @@ export const DoctorProvider = ({ children }) => {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-   if(savedUser){
+  
      const userdata= JSON.parse(savedUser)
     if (userdata.role=="doctor") {
         
@@ -31,7 +31,7 @@ export const DoctorProvider = ({ children }) => {
     } else {
       setLoading(false);
     }
-   }
+   
   }, []);
 
   return (
