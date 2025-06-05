@@ -1013,7 +1013,7 @@ const DoctorProfilePage = () => {
 
   const updateDoctorProfile = async (doctorId, updatedData) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/doctor/update-by-id/${doctorId}`, {
+      const response = await fetch(`https://practo-backend.vercel.app/api/doctor/update-by-id/${doctorId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
