@@ -22,7 +22,9 @@ export const DoctorProvider = ({ children }) => {
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
-    if (savedUser) {
+    const userdata= JSON.parse(savedUser)
+    if (userdata.role=="doctor") {
+        
       const user = JSON.parse(savedUser);
       fetchDoctorInfo(user.id); // assumes user has _id after login
     } else {
