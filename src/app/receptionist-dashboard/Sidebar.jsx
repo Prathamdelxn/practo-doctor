@@ -1,4 +1,4 @@
-// components/layout/Sidebar.jsx
+// components/layout/Sidebar.jsx push the receptionist
 'use client';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
