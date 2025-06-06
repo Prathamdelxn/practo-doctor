@@ -182,7 +182,7 @@ export default function HeroSection() {
               <div className="absolute inset-4 bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="h-full w-full flex items-center justify-center">
                   <Image
-                    src="/doctor-patient.jpg" 
+                    src="/doctor-with-patient.jpeg" 
                     alt="Doctor with patient"
                     width={400}
                     height={300}
