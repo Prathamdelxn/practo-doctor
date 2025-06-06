@@ -391,7 +391,15 @@ const handleSubmit = async (values, { setSubmitting, resetForm }) => {
         Sign up
       </button>
     </>
-  ) : null
+  ) : <div>
+      Login Receptionist here?{' '}
+      <button 
+        onClick={() =>  router.push("/receptionist-login")} 
+        className="font-medium text-blue-600 hover:text-blue-500"
+      >
+        Sign up
+      </button>
+  </div>
 ) : (
   <>
     Already have an account?{' '}

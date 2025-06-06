@@ -10,6 +10,8 @@ import DoctorsSection from '@/components/DoctorsSection';
 import Footer from '@/components/Footer';
 import ClinicsPage from '@/components/NearbyClinics';
 import Articles from '@/components/Articles';
+import PatientHistoryPage from './patient-history/page';
+import PatientHistoryCTA from '@/components/PatienHistory';
 
 export default function Home() {
   return (
@@ -26,8 +28,10 @@ export default function Home() {
         <Services />
         <DoctorsSection />
         <ClinicsPage/>
+
         <Articles/>
-        
+       
+        <PatientHistoryCTA/>
         {/* <HospitalsSection /> */}
         {/* <AppDownload /> */}
       </main>

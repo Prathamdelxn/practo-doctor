@@ -33,7 +33,7 @@ useEffect(() => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('http://localhost:3001/api/reciptionist/fetchAll'); // Adjust the endpoint as needed
+      const response = await fetch('https://practo-backend.vercel.app/api/reciptionist/fetchAll'); // Adjust the endpoint as needed
       if (!response.ok) {
         throw new Error('Failed to fetch receptionists');
       }
@@ -131,7 +131,7 @@ useEffect(() => {
       let response;
       if (currentReceptionist) {
         // Update existing receptionist
-        response = await fetch(`http://localhost:3001/api/reciptionist/update-by-id/${currentReceptionist._id}`, {
+        response = await fetch(`https://practo-backend.vercel.app/api/reciptionist/update-by-id/${currentReceptionist._id}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -141,7 +141,7 @@ useEffect(() => {
       } else {
         
         // Create new receptionist
-        response = await fetch('http://localhost:3001/api/reciptionist/create', {
+        response = await fetch('https://practo-backend.vercel.app/api/reciptionist/create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

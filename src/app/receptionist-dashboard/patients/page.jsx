@@ -1,6 +1,6 @@
 // app/dashboard/patients/page.js
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { 
   Search, 
@@ -16,72 +16,10 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-// Mock data
-const patientsData = [
-  {
-    id: 1,
-    name: 'Sarah Johnson',
-    age: 28,
-    gender: 'Female',
-    phone: '+1 (555) 123-4567',
-    email: 'sarah.johnson@email.com',
-    lastVisit: '2024-01-15',
-    doctor: 'Dr. Smith',
-    status: 'Active',
-    registrationDate: '2023-12-01'
-  },
-  {
-    id: 2,
-    name: 'Michael Chen',
-    age: 45,
-    gender: 'Male',
-    phone: '+1 (555) 987-6543',
-    email: 'michael.chen@email.com',
-    lastVisit: '2024-01-14',
-    doctor: 'Dr. Davis',
-    status: 'Follow-up',
-    registrationDate: '2023-11-15'
-  },
-  {
-    id: 3,
-    name: 'Emma Rodriguez',
-    age: 32,
-    gender: 'Female',
-    phone: '+1 (555) 456-7890',
-    email: 'emma.rodriguez@email.com',
-    lastVisit: '2024-01-13',
-    doctor: 'Dr. Wilson',
-    status: 'Active',
-    registrationDate: '2024-01-01'
-  },
-  {
-    id: 4,
-    name: 'David Wilson',
-    age: 58,
-    gender: 'Male',
-    phone: '+1 (555) 321-0987',
-    email: 'david.wilson@email.com',
-    lastVisit: '2024-01-12',
-    doctor: 'Dr. Brown',
-    status: 'Completed',
-    registrationDate: '2023-10-20'
-  },
-  {
-    id: 5,
-    name: 'Lisa Anderson',
-    age: 41,
-    gender: 'Female',
-    phone: '+1 (555) 654-3210',
-    email: 'lisa.anderson@email.com',
-    lastVisit: '2024-01-11',
-    doctor: 'Dr. Taylor',
-    status: 'Active',
-    registrationDate: '2023-12-15'
-  }
-];
-
 export default function PatientsPage() {
-  const [patients, setPatients] = useState(patientsData);
+  const [patients, setPatients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterGender, setFilterGender] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
@@ -89,6 +27,25 @@ export default function PatientsPage() {
   const [sortOrder, setSortOrder] = useState('asc');
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(10);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      try {
+        const response = await fetch('https://practo-backend.vercel.app/api/patients/fetchAll');
+        if (!response.ok) {
+          throw new Error('Failed to fetch patients');
+        }
+        const data = await response.json();
+        setPatients(data.data || []);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPatients();
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -105,8 +62,32 @@ export default function PatientsPage() {
     }
   };
 
+  // Transform patient data for display
+  const transformPatientData = (patient) => {
+    return {
+      id: patient._id,
+      name: `${patient.firstName} ${patient.lastName}`,
+      age: calculateAge(patient.dateOfBirth),
+      gender: patient.gender,
+      phone: patient.phone,
+      email: patient.email,
+      lastVisit: patient.updatedAt, // Using updatedAt as last visit for now
+      doctor: 'Dr. Smith', // You might want to fetch this from another API
+      status: 'Active', // Default status, you can modify this based on your logic
+      registrationDate: patient.createdAt
+    };
+  };
+
+  function calculateAge(dateOfBirth) {
+    const dob = new Date(dateOfBirth);
+    const diff = Date.now() - dob.getTime();
+    const ageDate = new Date(diff);
+    return Math.abs(ageDate.getUTCFullYear() - 1970);
+  }
+
   // Filter and sort patients
   const filteredPatients = patients
+    .map(transformPatientData)
     .filter(patient => {
       const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           patient.phone.includes(searchTerm) ||
@@ -132,11 +113,48 @@ export default function PatientsPage() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedPatients = filteredPatients.slice(startIndex, startIndex + itemsPerPage);
 
-  const handleDelete = (patientId) => {
+  const handleDelete = async (patientId) => {
     if (window.confirm('Are you sure you want to delete this patient?')) {
-      setPatients(patients.filter(p => p.id !== patientId));
+      try {
+        const response = await fetch(`https://practo-backend.vercel.app/api/patients/delete/${patientId}`, {
+          method: 'DELETE'
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to delete patient');
+        }
+        
+        setPatients(patients.filter(p => p._id !== patientId));
+      } catch (err) {
+        alert(`Error deleting patient: ${err.message}`);
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="bg-red-50 border-l-4 border-red-400 p-4">
+        <div className="flex">
+          <div className="flex-shrink-0">
+            <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+          </div>
+          <div className="ml-3">
+            <p className="text-sm text-red-700">{error}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -147,7 +165,7 @@ export default function PatientsPage() {
           <p className="text-gray-600 mt-1">Manage all patient records and information</p>
         </div>
         <Link
-          href="/dashboard/patients/add"
+          href="/receptionist-dashboard/patients/add"
           className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-colors"
         >
           <Plus className="w-4 h-4 mr-2" />
@@ -179,6 +197,7 @@ export default function PatientsPage() {
             <option value="">All Genders</option>
             <option value="Male">Male</option>
             <option value="Female">Female</option>
+            <option value="Other">Other</option>
           </select>
 
           {/* Status Filter */}
@@ -251,102 +270,114 @@ export default function PatientsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {paginatedPatients.map((patient) => (
-                <tr key={patient.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-sm font-medium text-blue-600">
-                          {patient.name.split(' ').map(n => n[0]).join('')}
-                        </span>
-                      </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-medium text-gray-900">
-                          {patient.name}
+              {paginatedPatients.length > 0 ? (
+                paginatedPatients.map((patient) => (
+                  <tr key={patient.id} className="hover:bg-gray-50">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                          <span className="text-sm font-medium text-blue-600">
+                            {patient.name.split(' ').map(n => n[0]).join('')}
+                          </span>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {patient.age} years, {patient.gender}
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {patient.name}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {patient.age} years, {patient.gender}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="space-y-1">
-                      <div className="flex items-center text-sm text-gray-900">
-                        <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                        {patient.phone}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="space-y-1">
+                        <div className="flex items-center text-sm text-gray-900">
+                          <Phone className="w-4 h-4 mr-2 text-gray-400" />
+                          {patient.phone}
+                        </div>
+                        {patient.email && (
+                          <div className="flex items-center text-sm text-gray-500">
+                            <Mail className="w-4 h-4 mr-2 text-gray-400" />
+                            {patient.email}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex items-center text-sm text-gray-500">
-                        <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                        {patient.email}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {new Date(patient.lastVisit).toLocaleDateString()}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {patient.doctor}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(patient.status)}`}>
+                        {patient.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      <div className="flex items-center space-x-2">
+                        <Link
+                          href={`/dashboard/patients/${patient.id}`}
+                          className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50"
+                        >
+                          <Eye className="w-4 h-4" />
+                        </Link>
+                        <Link
+                          href={`/dashboard/patients/${patient.id}/edit`}
+                          className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => handleDelete(patient.id)}
+                          className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {new Date(patient.lastVisit).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {patient.doctor}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(patient.status)}`}>
-                      {patient.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    <div className="flex items-center space-x-2">
-                      <Link
-                        href={`/dashboard/patients/${patient.id}`}
-                        className="text-blue-600 hover:text-blue-700 p-2 rounded-lg hover:bg-blue-50"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </Link>
-                      <Link
-                        href={`/dashboard/patients/${patient.id}/edit`}
-                        className="text-green-600 hover:text-green-700 p-2 rounded-lg hover:bg-green-50"
-                      >
-                        <Edit className="w-4 h-4" />
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(patient.id)}
-                        className="text-red-600 hover:text-red-700 p-2 rounded-lg hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                    No patients found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
 
         {/* Pagination */}
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="text-sm text-gray-700">
-              Page {currentPage} of {totalPages}
-            </div>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-                className="inline-flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </button>
-              <button
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-                className="inline-flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
+        {totalPages > 1 && (
+          <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="text-sm text-gray-700">
+                Page {currentPage} of {totalPages}
+              </div>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  disabled={currentPage === 1}
+                  className="inline-flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                  disabled={currentPage === totalPages}
+                  className="inline-flex items-center px-3 py-2 text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                  <ChevronRight className="w-4 h-4 ml-1" />
+                </button>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

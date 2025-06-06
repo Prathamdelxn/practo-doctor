@@ -8,6 +8,7 @@ import { ArrowLeft, Save, User, Phone, Mail, Calendar, MapPin, FileText } from '
 export default function AddPatientPage() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -19,16 +20,10 @@ export default function AddPatientPage() {
     city: '',
     state: '',
     zipCode: '',
-    emergencyContact: '',
-    emergencyPhone: '',
     medicalHistory: '',
     allergies: '',
     currentMedications: '',
-    symptoms: '',
-    referredBy: '',
-    insuranceProvider: '',
-    insuranceNumber: '',
-    primaryDoctor: ''
+    symptoms: ''
   });
 
   const handleChange = (e) => {
@@ -42,17 +37,30 @@ export default function AddPatientPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setError(null);
 
     try {
-      // Here you would typically send the data to your API
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+      const response = await fetch('https://practo-backend.vercel.app/api/patients/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create patient');
+      }
+
+      const result = await response.json();
+      console.log('Patient created successfully:', result);
       
-      console.log('Patient data:', formData);
-      
-      // Redirect to patients list or patient detail page
-      router.push('/dashboard/patients');
+      // Redirect to patients list with success message
+      alert("Patient added Successfully ")
     } catch (error) {
       console.error('Error adding patient:', error);
+      setError(error.message || 'An error occurred while creating the patient');
     } finally {
       setIsSubmitting(false);
     }
@@ -62,12 +70,8 @@ export default function AddPatientPage() {
     <div className="space-y-6">
       {/* Page Header */}
       <div className="flex items-center space-x-4">
-        <Link
-          href="/dashboard/patients"
-          className="inline-flex items-center text-gray-600 hover:text-gray-900"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Patients
+        <Link href="/dashboard/patients" className="p-1 rounded-lg hover:bg-gray-100">
+          <ArrowLeft className="w-5 h-5 text-gray-500" />
         </Link>
         <div className="h-6 border-l border-gray-300" />
         <div>
@@ -75,6 +79,22 @@ export default function AddPatientPage() {
           <p className="text-gray-600 mt-1">Enter patient information to create a new record</p>
         </div>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-8">
         {/* Personal Information */}
@@ -252,48 +272,6 @@ export default function AddPatientPage() {
           </div>
         </div>
 
-        {/* Emergency Contact */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center">
-              <Phone className="w-5 h-5 text-gray-500 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">Emergency Contact</h3>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Emergency Contact Name
-                </label>
-                <input
-                  type="text"
-                  name="emergencyContact"
-                  value={formData.emergencyContact}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Contact name"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Emergency Contact Phone
-                </label>
-                <input
-                  type="tel"
-                  name="emergencyPhone"
-                  value={formData.emergencyPhone}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="+1 (555) 123-4567"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Medical Information */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
@@ -320,40 +298,6 @@ export default function AddPatientPage() {
                 />
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Primary Doctor
-                  </label>
-                  <select
-                    name="primaryDoctor"
-                    value={formData.primaryDoctor}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select primary doctor</option>
-                    <option value="Dr. Smith">Dr. Smith</option>
-                    <option value="Dr. Johnson">Dr. Johnson</option>
-                    <option value="Dr. Williams">Dr. Williams</option>
-                    <option value="Dr. Brown">Dr. Brown</option>
-                  </select>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Referred By
-                  </label>
-                  <input
-                    type="text"
-                    name="referredBy"
-                    value={formData.referredBy}
-                    onChange={handleChange}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Doctor or clinic name"
-                  />
-                </div>
-              </div>
-              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Medical History
@@ -378,7 +322,7 @@ export default function AddPatientPage() {
                   onChange={handleChange}
                   rows={2}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List any known allergies (medications, food, environmental)"
+                  placeholder="List any known allergies"
                 />
               </div>
               
@@ -392,49 +336,7 @@ export default function AddPatientPage() {
                   onChange={handleChange}
                   rows={3}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="List current medications, dosages, and frequency"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Insurance Information */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <div className="flex items-center">
-              <FileText className="w-5 h-5 text-gray-500 mr-2" />
-              <h3 className="text-lg font-semibold text-gray-900">Insurance Information</h3>
-            </div>
-          </div>
-          
-          <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Insurance Provider
-                </label>
-                <input
-                  type="text"
-                  name="insuranceProvider"
-                  value={formData.insuranceProvider}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Insurance company name"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Insurance Number
-                </label>
-                <input
-                  type="text"
-                  name="insuranceNumber"
-                  value={formData.insuranceNumber}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Policy or member ID"
+                  placeholder="List current medications with dosages"
                 />
               </div>
             </div>
