@@ -57,7 +57,7 @@ export default function ClinicDashboardLayout({ children }) {
     { icon: Activity, label: 'Overview', href: '/doctor-dashboard', id: 'overview' },
     { icon: Calendar, label: 'Appointments', href: '/doctor-dashboard/appointments', id: 'appointments' },
     { icon: Users, label: 'Patients', href: '/doctor-dashboard/patients', id: 'patients' },
-    { icon: Clock, label: 'Schedule', href: '/doctor-dashboard/schedule', id: 'schedule' },
+    { icon: Users, label: 'Receptionist', href: '/doctor-dashboard/receptionist', id: 'schedule' },
    
     { icon: CreditCard, label: 'Billing', href: '/doctor-dashboard/billing', id: 'billing' },
      { icon: FileText, label: 'Medical Records', href: '/doctor-dashboard/records', id: 'records' },
