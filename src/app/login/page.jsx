@@ -472,7 +472,7 @@ const AuthPage = () => {
     };
 
     try {
-      const apiBase = " http://localhost:3001/api";
+      const apiBase = " https://practo-backend.vercel.app/api";
       const endpoint =
         authMode === "signup"
           ? `${apiBase}/${userType}/auth/signup`

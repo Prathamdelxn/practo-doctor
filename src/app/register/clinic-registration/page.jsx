@@ -785,7 +785,7 @@ const handleFileChange = async (e) => {
       console.log(formData);
       await new Promise(resolve => setTimeout(resolve, 2000));
       try{
-         const response = await fetch('http://localhost:3001/api/clinic/register', {
+         const response = await fetch('https://practo-backend.vercel.app/api/clinic/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

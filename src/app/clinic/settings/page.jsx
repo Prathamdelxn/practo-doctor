@@ -40,7 +40,7 @@ export default function ClinicSettings() {
 
  const fetchUserData = async (id) => {
     try {
-      const res = await fetch(`http://localhost:3001/api/clinic/fetchProfileData/${id}`);
+      const res = await fetch(`https://practo-backend.vercel.app/api/clinic/fetchProfileData/${id}`);
       if (!res.ok) throw new Error('Failed to fetch doctor info');
       const data = await res.json();
      

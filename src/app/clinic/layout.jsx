@@ -54,6 +54,7 @@ console.log("sadf",clinicData?.logo);
     { icon: LayoutDashboard, label: 'Dashboard', href: '/clinic', id: 'dashboard' },
     { icon: Users, label: 'Doctors', href: '/clinic/doctors', id: 'doctors' },
     { icon: UserPlus, label: 'Receptionists', href: '/clinic/receptionists', id: 'receptionists' },
+     { icon: User, label: 'Patients', href: '/clinic/patients', id: 'patients' },
     { icon: ImageIcon, label: 'Manage Images', href: '/clinic/images', id: 'images' },
     { icon: Settings, label: 'Settings', href: '/clinic/settings', id: 'settings' }
   ];
