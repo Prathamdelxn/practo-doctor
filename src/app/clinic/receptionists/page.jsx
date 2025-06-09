@@ -1,132 +1,521 @@
-'use client';
-import { useState } from 'react';
-import { Search, Plus, Phone, Mail } from 'lucide-react';
-import Link from 'next/link';
 
-const receptionists = [
-  {
-    id: 1,
-    name: 'Lisa Wong',
-    email: 'lisa.wong@clinic.com',
-    phone: '9876543210',
-    shift: 'Morning (8AM-4PM)',
-    status: 'Active',
-    image: '/staff/receptionist-1.jpg'
-  },
-  {
-    id: 2,
-    name: 'Michael Chen',
-    email: 'michael.chen@clinic.com',
-    phone: '8765432109',
-    shift: 'Evening (4PM-12AM)',
-    status: 'Active',
-    image: '/staff/receptionist-2.jpg'
-  },
-  {
-    id: 3,
-    name: 'Sarah Johnson',
-    email: 'sarah.j@clinic.com',
-    phone: '7654321098',
-    shift: 'Night (12AM-8AM)',
-    status: 'On Leave',
-    image: '/staff/receptionist-3.jpg'
-  }
-];
+           'use client'
 
-const statusColors = {
-  Active: 'bg-green-100 text-green-800',
-  'On Leave': 'bg-yellow-100 text-yellow-800'
-};
+import { useState, useEffect } from 'react';
+import { FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { MdOutlineVerified, MdOutlinePending } from 'react-icons/md';
 
-export default function ReceptionistsPage() {
-  const [query, setQuery] = useState('');
+const ReceptionistManagement = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentReceptionist, setCurrentReceptionist] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeFilter, setActiveFilter] = useState('all');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [receptionists, setReceptionists] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [submitLoading, setSubmitLoading] = useState(false);
+const[doctorId,setID]=useState();
+  // Fetch receptionists on component mount
+  useEffect(() => {
+    fetchReceptionists();
+  }, []);
+useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+  const docData=JSON.parse(savedUser);
+    console.log("docotr user",docData);
+    setID(docData.id);
+   
+    
+  }, []);
+  const fetchReceptionists = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('https://practo-backend.vercel.app/api/reciptionist/fetchAll'); // Adjust the endpoint as needed
+      if (!response.ok) {
+        throw new Error('Failed to fetch receptionists');
+      }
+      const data = await response.json();
+      setReceptionists(data.data);
+    } catch (err) {
+      setError('Failed to load receptionists');
+      console.error('Error fetching receptionists:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filtered = receptionists.filter((r) =>
-    r.name.toLowerCase().includes(query.toLowerCase()) ||
-    r.email.toLowerCase().includes(query.toLowerCase()) ||
-    r.phone.includes(query)
-  );
+  const filteredReceptionists = receptionists.filter(receptionist => {
+    const matchesSearch = `${receptionist.firstName} ${receptionist.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         receptionist.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = activeFilter === 'all' || receptionist.status === activeFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const openAddModal = () => {
+    setCurrentReceptionist(null);
+    setIsModalOpen(true);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const openEditModal = (receptionist) => {
+    setCurrentReceptionist(receptionist);
+    setIsModalOpen(true);
+    setShowPassword(false);
+    setShowConfirmPassword(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Are you sure you want to delete this receptionist?')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/staff/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete receptionist');
+      }
+
+      // Remove from local state
+      setReceptionists(prev => prev.filter(r => r._id !== id));
+      alert('Receptionist deleted successfully');
+    } catch (err) {
+      console.error('Error deleting receptionist:', err);
+      alert('Failed to delete receptionist');
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setSubmitLoading(true);
+    setError('');
+
+    const formData = new FormData(e.target);
+    const data = {
+      firstName: formData.get('firstName'),
+      lastName: formData.get('lastName'),
+      email: formData.get('email'),
+      phone: formData.get('phone'),
+      status: formData.get('status'),
+      doctorId:doctorId,
+      // Add doctorId if needed - you might want to get this from context or props
+      // doctorId: formData.get('doctorId'), 
+    };
+
+    // Handle password for new receptionists
+    if (!currentReceptionist) {
+      const password = formData.get('password');
+      const confirmPassword = formData.get('confirmPassword');
+      
+      if (password !== confirmPassword) {
+        alert('Passwords do not match!');
+        setSubmitLoading(false);
+        return;
+      }
+      data.password = password;
+    } else {
+      // Handle password change for existing receptionists
+      const newPassword = formData.get('newPassword');
+      if (newPassword && newPassword.length > 0) {
+        data.password = newPassword;
+      }
+    }
+
+    try {
+      let response;
+      if (currentReceptionist) {
+        // Update existing receptionist
+        response = await fetch(`https://practo-backend.vercel.app/api/reciptionist/update-by-id/${currentReceptionist._id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+      } else {
+        
+        // Create new receptionist
+        response = await fetch('https://practo-backend.vercel.app/api/reciptionist/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(data),
+        });
+      }
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to save receptionist');
+      }
+
+      const savedReceptionist = await response.json();
+
+      if (currentReceptionist) {
+        // Update in local state
+        setReceptionists(prev => 
+          prev.map(r => r._id === currentReceptionist._id ? savedReceptionist : r)
+        );
+        alert('Receptionist updated successfully');
+      } else {
+        // Add to local state
+        setReceptionists(prev => [...prev, savedReceptionist]);
+        alert('Receptionist created successfully');
+      }
+
+      setIsModalOpen(false);
+    } catch (err) {
+      console.error('Error saving receptionist:', err);
+      setError(err.message);
+    } finally {
+      setSubmitLoading(false);
+    }
+  };
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-bold text-blue-600">Receptionist Management</h2>
-        <Link href="/clinic/receptionists/add">
-          <button className="bg-indigo-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-indigo-700">
-            <Plus className="w-5 h-5" /> Add Receptionist
+    <div className="min-h-screen bg-gray-50 p-6">
+      {/* Header Section */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800">Receptionist Management</h1>
+        <button
+          onClick={openAddModal}
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+        >
+          <FiUserPlus size={18} />
+          Add New Receptionist
+        </button>
+      </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+          {error}
+        </div>
+      )}
+
+      {/* Search and Filter Bar */}
+      <div className="flex flex-col md:flex-row gap-4 mb-6">
+        <div className="relative flex-1">
+          <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search receptionists..."
+            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <select
+          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value)}
+        >
+          <option value="all">All Receptionists</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+
+      {/* Receptionists Table */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredReceptionists.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
+                      No receptionists found
+                    </td>
+                  </tr>
+                ) : (
+                  filteredReceptionists.map((receptionist) => (
+                    <tr key={receptionist._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                            {receptionist.firstName?.charAt(0)}{receptionist.lastName?.charAt(0)}
+                          </div>
+                          <div className="ml-4">
+                            <div className="text-sm font-medium text-gray-900">
+                              {receptionist.firstName} {receptionist.lastName}
+                            </div>
+                            
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {receptionist.email}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                        {receptionist.phone}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        {receptionist.status === 'active' ? (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 items-center gap-1">
+                            <MdOutlineVerified size={14} /> Active
+                          </span>
+                        ) : (
+                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 items-center gap-1">
+                            <MdOutlinePending size={14} /> Inactive
+                          </span>
+                        )}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => openEditModal(receptionist)}
+                          className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        >
+                          <FiEdit2 size={18} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(receptionist._id)}
+                          className="text-red-600 hover:text-red-900"
+                        >
+                          <FiTrash2 size={18} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-between items-center mt-6">
+        <div className="text-sm text-gray-500">
+          Showing {filteredReceptionists.length} of {receptionists.length} entries
+        </div>
+        <div className="flex gap-1">
+          <button className="p-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100 disabled:opacity-50">
+            <FiChevronLeft size={18} />
           </button>
-        </Link>
+          <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium">
+            1
+          </button>
+          <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
+            2
+          </button>
+          <button className="p-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100">
+            <FiChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* Search Bar */}
-      <div className="flex items-center gap-2 mb-6">
-        <Search className="text-gray-400" />
-        <input
-          type="text"
-          placeholder="Search receptionist..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 border rounded-md px-4 py-2 focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </div>
-
-      {/* Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filtered.map((r) => (
-          <div
-            key={r.id}
-            className="bg-indigo-100 hover:bg-indigo-200 rounded-lg p-4 shadow-sm transition-colors duration-200"
-          >
-            <div className="flex items-center gap-4 mb-3">
-              <img
-                src={r.image}
-                alt={r.name}
-                className="w-24 h-24 rounded-full object-cover border-4 border-white"
-                onError={(e) => {
-                  e.target.onerror = null;
-                  e.target.src = '/staff/default.jpg';
-                }}
-                loading="lazy"
-              />
-              <div>
-                <h3 className="font-semibold text-lg text-gray-800">{r.name}</h3>
-                <p className="text-sm text-gray-600">{r.email}</p>
-              </div>
+      {/* Add/Edit Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+            <div className="flex justify-between items-center p-6 border-b">
+              <h3 className="text-xl font-semibold text-gray-800">
+                {currentReceptionist ? 'Edit Receptionist' : 'Add New Receptionist'}
+              </h3>
+              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-500">
+                <FiX size={24} />
+              </button>
             </div>
-            <p className="text-sm text-gray-700 mb-1">
-              <span className="font-medium">Phone:</span> {r.phone}
-            </p>
-            <p className="text-sm text-gray-700 mb-1">
-              <span className="font-medium">Shift:</span> {r.shift}
-            </p>
-            <p className={`inline-block text-xs px-2 py-1 rounded ${statusColors[r.status]}`}>
-              {r.status}
-            </p>
-            <div className="mt-4 flex gap-2">
-              <a
-                href={`tel:${r.phone}`}
-                className="bg-white hover:bg-gray-100 border text-indigo-700 text-sm px-3 py-1 rounded flex items-center gap-1"
-              >
-                <Phone className="w-4 h-4" />
-                Call
-              </a>
-              <a
-                href={`mailto:${r.email}`}
-                className="bg-white hover:bg-gray-100 border text-indigo-700 text-sm px-3 py-1 rounded flex items-center gap-1"
-              >
-                <Mail className="w-4 h-4" />
-                Email
-              </a>
+            <div className="p-6">
+              {error && (
+                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+                  {error}
+                </div>
+              )}
+              <form onSubmit={handleSubmit}>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      First Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="firstName"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                      defaultValue={currentReceptionist?.firstName || ''}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Last Name <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="lastName"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                      defaultValue={currentReceptionist?.lastName || ''}
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    defaultValue={currentReceptionist?.email || ''}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="phone"
+                    required
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    defaultValue={currentReceptionist?.phone || ''}
+                  />
+                </div>
+
+                {/* Password fields - shown for new receptionists or when editing (optional for edit) */}
+                {!currentReceptionist && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Password <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          name="password"
+                          required
+                          minLength={8}
+                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                          placeholder="Enter password (min 8 characters)"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Confirm Password <span className="text-red-500">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showConfirmPassword ? "text" : "password"}
+                          name="confirmPassword"
+                          required
+                          minLength={8}
+                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                          placeholder="Confirm password"
+                        />
+                        <button
+                          type="button"
+                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Optional password change for existing receptionists */}
+                {currentReceptionist && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      New Password (optional)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        name="newPassword"
+                        minLength={8}
+                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                        placeholder="Leave blank to keep current password"
+                      />
+                      <button
+                        type="button"
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                        onClick={() => setShowPassword(!showPassword)}
+                      >
+                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Minimum 8 characters required if changing password
+                    </p>
+                  </div>
+                )}
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                  <select
+                    name="status"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                    defaultValue={currentReceptionist?.status || 'active'}
+                  >
+                    <option value="active">Active</option>
+                    <option value="inactive">Inactive</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t">
+                  <button
+                    type="button"
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
+                    disabled={submitLoading}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center gap-2"
+                    disabled={submitLoading}
+                  >
+                    {submitLoading && (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    )}
+                    {currentReceptionist ? 'Update' : 'Create'} Receptionist
+                  </button>
+                </div>
+              </div>
+              </form>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Empty State */}
-      {filtered.length === 0 && (
-        <p className="text-gray-500 mt-8 text-center">No receptionists found.</p>
+        </div>
       )}
     </div>
   );
-}
+};
+
+export default ReceptionistManagement;

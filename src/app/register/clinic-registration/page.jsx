@@ -559,7 +559,7 @@
 
 
 'use client';
-import { useState } from 'react';
+import { useState,useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function ClinicRegistrationForm() {
@@ -595,6 +595,28 @@ export default function ClinicRegistrationForm() {
   const [errors, setErrors] = useState({});
   const [currentStep, setCurrentStep] = useState(0);
   const router = useRouter();
+    const fileInputRef = useRef(null)
+const uploadImageToCloudinary = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/clinicImages', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+
+    const data = await response.json();
+    return data.url;
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+};
 
   const clinicTypes = [
     { value: 'general', label: 'General Practice', icon: '🏥' },
@@ -666,13 +688,37 @@ export default function ClinicRegistrationForm() {
       }
     }));
   };
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-  const handleFileChange = (e) => {
-    setFormData(prev => ({
-      ...prev,
-      logo: e.target.files[0]
-    }));
-  };
+  try {
+    setIsSubmitting(true);
+    
+    // First create a local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, profileImage: reader.result }));
+    };
+    reader.readAsDataURL(file);
+
+    // Then upload to Cloudinary
+    const cloudinaryUrl = await uploadImageToCloudinary(file);
+    setFormData(prev => ({ ...prev, logo: cloudinaryUrl }));
+    
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    // Handle error (show toast, etc.)
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+//   const handleFileChange = (e) => {
+//     setFormData(prev => ({
+//       ...prev,
+//       logo: e.target.files[0]
+//     }));
+//   };
 
   const validateForm = () => {
     const newErrors = {};
@@ -847,7 +893,7 @@ console.log(data);
                 <div className="relative group">
                   <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-lg transition-transform duration-300 group-hover:scale-105">
                     {formData.logo ? (
-                      <img src={URL.createObjectURL(formData.logo)} alt="Clinic logo" className="w-full h-full object-cover" />
+                      <img src={formData.logo} alt="Clinic logo" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-4xl text-blue-400">
                         🏥
