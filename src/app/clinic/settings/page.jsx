@@ -38,6 +38,26 @@ export default function ClinicSettings() {
   const [activeTab, setActiveTab] = useState('basic');
   const fileInputRef = useRef(null);
 
+ const fetchUserData = async (id) => {
+    try {
+      const res = await fetch(`http://localhost:3001/api/clinic/fetchProfileData/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch doctor info');
+      const data = await res.json();
+     
+      setFormData(data.clinic);
+    } catch (err) {
+      console.error(err);
+    } finally {
+     
+    }
+  };
+
+useEffect(()=>{
+  const user=localStorage.getItem('user')
+  const userdata=JSON.parse(user);
+  const id=userdata?.id
+ fetchUserData(id);
+})
   const clinicTypes = [
     { value: 'general', label: 'General Practice', icon: '🏥' },
     { value: 'specialty', label: 'Specialty Clinic', icon: '⚕️' },

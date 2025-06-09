@@ -574,6 +574,7 @@ export default function ClinicRegistrationForm() {
     email: '',
     website: '',
     registrationNumber: '',
+    password: '',
     taxId: '',
     clinicType: 'general',
     specialties: [],
@@ -750,7 +751,13 @@ const handleFileChange = async (e) => {
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Invalid email format';
     }
-    
+    if (!formData.password.trim()) {
+    newErrors.password = 'Password is required';
+  } else if (formData.password.length < 8) {
+    newErrors.password = 'Password must be at least 8 characters';
+  } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(formData.password)) {
+    newErrors.password = 'Password must contain uppercase, lowercase, number, and special character';
+  }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -778,7 +785,7 @@ const handleFileChange = async (e) => {
       console.log(formData);
       await new Promise(resolve => setTimeout(resolve, 2000));
       try{
-         const response = await fetch('https://practo-backend.vercel.app/api/clinic/register', {
+         const response = await fetch('http://localhost:3001/api/clinic/register', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -793,9 +800,9 @@ console.log(data);
 
       }
       setSuccessMessage('Clinic registered successfully!');
-    //   setTimeout(() => {
-    //     router.push('/dashboard');
-    //   }, 2000);
+      setTimeout(() => {
+        router.push('/login');
+      }, 2000);
     } catch (error) {
       console.error('Registration error:', error);
       setErrors({ submit: 'Failed to register clinic. Please try again.' });
@@ -1061,6 +1068,51 @@ console.log(data);
                   placeholder="https://yourclinic.com"
                 />
               </div>
+               <div className="group">
+          <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+            Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${
+                errors.password ? 'border-red-500' : 'border-gray-200'
+              }`}
+              placeholder="Create a secure password"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                const passwordInput = document.getElementById('password');
+                if (passwordInput.type === 'password') {
+                  passwordInput.type = 'text';
+                } else {
+                  passwordInput.type = 'password';
+                }
+              }}
+            >
+              👁️
+            </button>
+          </div>
+          {errors.password && (
+            <p className="mt-2 text-sm text-red-600 animate-shake">{errors.password}</p>
+          )}
+          <div className="mt-2 text-xs text-gray-500">
+            Password must contain:
+            <ul className="list-disc pl-5 mt-1">
+              <li className={formData.password.length >= 8 ? 'text-green-500' : ''}>At least 8 characters</li>
+              <li className={/[A-Z]/.test(formData.password) ? 'text-green-500' : ''}>One uppercase letter</li>
+              <li className={/[a-z]/.test(formData.password) ? 'text-green-500' : ''}>One lowercase letter</li>
+              <li className={/\d/.test(formData.password) ? 'text-green-500' : ''}>One number</li>
+              <li className={/[@$!%*?&]/.test(formData.password) ? 'text-green-500' : ''}>One special character</li>
+            </ul>
+          </div>
+        </div>
             </div>
           </div>
         );
@@ -1332,7 +1384,7 @@ console.log(data);
               <p className="text-lg text-gray-600 mb-6">{successMessage}</p>
               <div className="animate-pulse">
                 <p className="text-sm text-gray-500">
-                  Redirecting to dashboard...
+                  Redirecting to Login...
                 </p>
               </div>
             </div>

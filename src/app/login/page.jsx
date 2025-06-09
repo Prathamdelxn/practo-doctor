@@ -472,7 +472,7 @@ const AuthPage = () => {
     };
 
     try {
-      const apiBase = "https://practo-backend.vercel.app/api";
+      const apiBase = " http://localhost:3001/api";
       const endpoint =
         authMode === "signup"
           ? `${apiBase}/${userType}/auth/signup`
@@ -504,7 +504,7 @@ const AuthPage = () => {
               router.push("/admin");
               break;
             case 'clinic':
-              router.push("/clinic-dashboard");
+              router.push("/clinic");
               break;
             case 'patients':
               router.push("/patient-dashboard");
