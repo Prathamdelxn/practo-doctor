@@ -144,7 +144,7 @@ export default function Navbar() {
               <Link href="/login" className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                 Login
               </Link>
-              <Link href="/doctor-registration" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+              <Link href="/register" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
                 Register
               </Link>
             </div>

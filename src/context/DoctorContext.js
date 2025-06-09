@@ -19,22 +19,30 @@ export const DoctorProvider = ({ children }) => {
       setLoading(false);
     }
   };
+useEffect(() => {
+  const savedUser = localStorage.getItem('user');
 
-  useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-  
-    if(savedUser){
-         const userdata= JSON.parse(savedUser)
-    if (userdata.role=="doctor") {
-        
-      const user = JSON.parse(savedUser);
-      fetchDoctorInfo(user.id); // assumes user has _id after login
+
+  try {
+    if (!savedUser || savedUser === 'undefined') {
+      console.warn('No valid user found in localStorage.');
+      setLoading(false);
+      return;
+    }
+  console.log('Saved User:', savedUser);
+    const userdata = JSON.parse(savedUser);
+    if (userdata?.role === 'doctor') {
+      fetchDoctorInfo(userdata.id);
     } else {
       setLoading(false);
     }
-   
-    }
-  }, []);
+  } catch (err) {
+    console.error('Error parsing user from localStorage:', err);
+    localStorage.removeItem('user'); // Remove corrupted value
+    setLoading(false);
+  }
+}, []);
+
 
   return (
     <DoctorContext.Provider value={{ doctor, loading }}>
