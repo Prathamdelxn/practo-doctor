@@ -32,7 +32,7 @@ const handleSubmit = async (e) => {
 
   if (currentStep === 3) {
     try {
-      const response = await fetch('http://localhost:3001/api/patients/register', {
+      const response = await fetch('https://practo-backend.vercel.app/api/patients/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'

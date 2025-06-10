@@ -4,20 +4,9 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  LayoutDashboard,
-  Users,
-  UserPlus,
-  Image as ImageIcon,
-  Settings,
-  LogOut,
-  Bell,
-  Search,
-  Menu,
-  X,
-  ChevronDown,
-  Building2,
-  Stethoscope,
-  User
+  LayoutDashboard, Users, UserPlus, Image as ImageIcon,
+  Settings, LogOut, Bell, Search, Menu, X, ChevronDown,
+  Building2, Stethoscope, User
 } from 'lucide-react';
 import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +17,31 @@ export default function ClinicLayout({ children }) {
   const pathname = usePathname();
   const router = useRouter();
   const [clinicData, setClinicData] = useState(null);
+  const [hasMounted, setHasMounted] = useState(false); // <- Add this
+
+  useEffect(() => {
+    setHasMounted(true); // <- Mark mounted
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
+
+    if (!token || !userStr) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      const user = JSON.parse(userStr);
+      setClinicData(user);
+      if (user.role !== "clinic") {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Invalid user data in localStorage');
+      router.push('/login');
+    }
+  }, [router]);
+
+  if (!hasMounted) return null; // <- Fix hydration issue
 
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/clinic', id: 'dashboard' },
@@ -40,40 +54,26 @@ export default function ClinicLayout({ children }) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Mobile overlay */}
       {sidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
+        <div className="fixed inset-0 bg-black bg-opacity-40 z-40 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      {/* Sidebar */}
       <AnimatePresence>
-        {(sidebarOpen || typeof window !== 'undefined' && window.innerWidth >= 1024) && (
+        {sidebarOpen && (
           <motion.div
             initial={{ x: -300 }}
             animate={{ x: 0 }}
             exit={{ x: -300 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl lg:translate-x-0"
+            className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl"
           >
-            <div className="flex h-16 items-center justify-around px-6 border-b border-gray-200/50">
-              <div className="w-10 h-10 bg-white shadow-xl rounded-lg flex items-center justify-center">
-                <Building2 className="w-5 h-5 text-blue-600" />
-              </div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                HealthByte
-              </h1>
-              <button
-                onClick={() => setSidebarOpen(false)}
-                className="lg:hidden p-2 rounded-lg hover:bg-gray-100/50 transition-colors"
-              >
-                <X className="h-5 w-5" />
+            <div className="flex justify-between items-center px-4 py-3 border-b">
+              <h1 className="text-lg font-semibold text-blue-600">HealthByte</h1>
+              <button onClick={() => setSidebarOpen(false)}>
+                <X className="w-5 h-5" />
               </button>
             </div>
-
-            <nav className="mt-8 px-4">
+            <nav className="mt-4 px-4">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -95,31 +95,11 @@ export default function ClinicLayout({ children }) {
                 );
               })}
             </nav>
-
-            <div className="absolute bottom-6 left-4 right-4">
-              <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 text-white">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                    {clinicData?.profileImage ? (
-                      <img src={clinicData.profileImage} alt="Clinic" className="rounded-full w-full h-full object-cover" />
-                    ) : (
-                      <Building2 className="w-5 h-5" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-semibold">{clinicData?.name || 'Clinic Name'}</p>
-                    <p className="text-sm opacity-90">{clinicData?.email || 'clinic@example.com'}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main content area */}
       <div className="lg:ml-64">
-        {/* Top navbar */}
         <header className="bg-white shadow-sm border-b border-gray-200">
           <div className="flex items-center justify-between h-16 px-6">
             <div className="flex items-center">
@@ -127,11 +107,7 @@ export default function ClinicLayout({ children }) {
                 onClick={() => setSidebarOpen(true)}
                 className="lg:hidden p-2 rounded-md text-gray-600 hover:bg-gray-100"
               >
-                <Menu
-                  className={`w-5 h-5 transition-transform duration-300 ${
-                    sidebarOpen ? 'rotate-90' : ''
-                  }`}
-                />
+                <Menu className={`w-5 h-5 transition-transform duration-300 ${sidebarOpen ? 'rotate-90' : ''}`} />
               </button>
 
               <div className="hidden md:flex items-center ml-4">
@@ -158,8 +134,8 @@ export default function ClinicLayout({ children }) {
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                    {clinicData?.profileImage ? (
-                      <img src={clinicData.profileImage} alt="Clinic" className="rounded-full w-full h-full object-cover" />
+                    {clinicData?.logo ? (
+                      <img src={clinicData.logo} alt="Clinic" className="rounded-full w-full h-full object-cover" />
                     ) : (
                       <Building2 className="w-4 h-4 text-white" />
                     )}
@@ -177,21 +153,11 @@ export default function ClinicLayout({ children }) {
                       <p className="text-sm font-medium text-gray-900">{clinicData?.name || 'Clinic Name'}</p>
                       <p className="text-xs text-gray-500">{clinicData?.email || 'clinic@example.com'}</p>
                     </div>
-                    <Link
-                      href="/clinic/settings"
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setProfileDropdownOpen(false)}
-                    >
-                      <User className="w-4 h-4 mr-3" />
-                      Profile
+                    <Link href="/clinic/settings" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                      <User className="w-4 h-4 mr-3" /> Profile
                     </Link>
-                    <Link
-                      href="/clinic/settings"
-                      className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50"
-                      onClick={() => setProfileDropdownOpen(false)}
-                    >
-                      <Settings className="w-4 h-4 mr-3" />
-                      Settings
+                    <Link href="/clinic/settings" className="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50">
+                      <Settings className="w-4 h-4 mr-3" /> Settings
                     </Link>
                     <hr className="my-2" />
                     <button
@@ -202,8 +168,7 @@ export default function ClinicLayout({ children }) {
                       }}
                       className="w-full flex items-center px-4 py-2 text-red-600 hover:bg-red-50 text-left"
                     >
-                      <LogOut className="w-4 h-4 mr-3" />
-                      Sign out
+                      <LogOut className="w-4 h-4 mr-3" /> Sign out
                     </button>
                   </div>
                 )}
@@ -212,7 +177,6 @@ export default function ClinicLayout({ children }) {
           </div>
         </header>
 
-        {/* Children content */}
         <main className="p-6">{children}</main>
       </div>
     </div>

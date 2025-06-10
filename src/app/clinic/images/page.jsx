@@ -82,7 +82,6 @@ export default function ManageImages() {
               loading="lazy"
               onError={(e) => {
                 e.target.onerror = null;
-                e.target.src = '/clinic/default.jpg';
               }}
             />
             <button
