@@ -1,9 +1,11 @@
 'use client'
 
-import { useState } from 'react';
-import { User, Mail, Phone, Calendar, MapPin, Clock, Award, Stethoscope, Building, FileText, Eye, EyeOff } from 'lucide-react';
-
+import { useState,useEffect,useRef } from 'react';
+import { User, Mail, Phone, Calendar, MapPin, Clock, Award, Stethoscope, Building,Upload , FileText, Eye, EyeOff } from 'lucide-react';
+import axios from 'axios';
+import { useRouter } from 'next/navigation';
 export default function AddDoctorPage() {
+  const Router=useRouter();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -15,10 +17,11 @@ export default function AddDoctorPage() {
     phone: '',
     specialty: '',
     supSpeciality: '',
+    licenseNumber:'',
     experience: '',
     consultantFee: '',
     qualifications: [''],
-    licenseNumber: '',
+ clinicId:'',
     hospital: '',
     hospitalAddress: '',
     hospitalNumber: '',
@@ -28,7 +31,11 @@ export default function AddDoctorPage() {
 
   const [showPassword, setShowPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
-
+ const fileInputRef = useRef(null)
+ const [errors, setErrors] = useState({})
+   const [isSubmitting, setIsSubmitting] = useState(false)
+   const [success, setSuccess] = useState(false)
+    const [imagePreview, setImagePreview] = useState('');
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -36,7 +43,38 @@ export default function AddDoctorPage() {
       [name]: value
     }));
   };
+   const triggerFileInput = () => {
+    fileInputRef.current.click();
+  };
+const fetchUserData = async (id) => {
+    try {
+      const res = await fetch(`https://practo-backend.vercel.app/api/clinic/fetchProfileData/${id}`);
+      if (!res.ok) throw new Error('Failed to fetch doctor info');
+      const data = await res.json();
+     
+      // console.log("afd",data.clinic);
+      // setFormData(...,hospi)
+       setFormData(prev => ({
+      ...prev,
+      hospital: data.clinic.clinicName || '',
+      hospitalAddress: `${data.clinic.address || ''}, ${data.clinic.city || ''}, ${data.clinic.state || ''}, ${data.clinic.country || ''} - ${data.clinic.postalCode || ''}`.replace(/^,\s*|,\s*$/g, ''), // Remove leading/trailing commas
+      hospitalNumber: data.clinic.phone || '',
+      licenseNumber:data.clinic.registrationNumber || "", 
+      clinicId:id
+    }));
+    } catch (err) {
+      console.error(err);
+    } finally {
+     
+    }
+  };
 
+useEffect(()=>{
+  const user=localStorage.getItem('user')
+  const userdata=JSON.parse(user);
+  const id=userdata?.id
+ fetchUserData(id);
+})
   const handleQualificationChange = (index, value) => {
     const newQualifications = [...formData.qualifications];
     newQualifications[index] = value;
@@ -72,15 +110,126 @@ export default function AddDoctorPage() {
     }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log('Form Data:', formData);
-    // Handle form submission here
-  };
+  // const handleSubmit = (e) => {
+  //   e.preventDefault();
+  //   console.log('Form Data:', formData);
+  //   // Handle form submission here
+  // };
+// const handleSubmit = async (e) => {
+//   e.preventDefault();
 
-  const nextStep = () => {
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
-  };
+//  if (currentStep !== 3) {
+//     return;
+//   }
+
+
+//   try {
+//     // console.log(formData)
+//     const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', formData);
+//     console.log('Success: Register');
+//     alert("Doctor Added Successfully");
+//      Router.refresh();
+//     // redirect('/dashboard'); // Example: Next.js navigation
+//   } catch (err) {
+//     console.log(err.response?.data?.message || 'Registration failed');
+//   } finally {
+   
+//   }
+// };
+
+const uploadImageToCloudinary = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+
+    const data = await response.json();
+    return data.url;
+  } catch (error) {
+    console.error('Upload error:', error);
+    throw error;
+  }
+};
+const handleFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    setIsSubmitting(true);
+    
+    // First create a local preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ ...prev, profileImage: reader.result }));
+    };
+    reader.readAsDataURL(file);
+
+    // Then upload to Cloudinary
+    const cloudinaryUrl = await uploadImageToCloudinary(file);
+    setFormData(prev => ({ ...prev, profileImage: cloudinaryUrl }));
+   setImagePreview(cloudinaryUrl)
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    // Handle error (show toast, etc.)
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+const handleSubmit = async (e) => {
+  e.preventDefault();
+
+  if (currentStep !== 3) {
+    return;
+  }
+
+  try {
+    const response = await axios.post('https://practo-backend.vercel.app/api/clinic/doctor-add', formData);
+    console.log('Success: Register');
+    alert("Doctor Added Successfully");
+    
+    // Reset form and step
+    setFormData({
+      firstName: '',
+      lastName: '',
+      profileImage: '',
+      dateOfBirth: '',
+      gender: '',
+      email: '',
+      password: '',
+      phone: '',
+      specialty: '',
+      supSpeciality: '',
+      licenseNumber: '',
+      experience: '',
+      consultantFee: '',
+      qualifications: [''],
+      clinicId: formData.clinicId, // Keep clinicId if needed
+      hospital: formData.hospital, // Keep hospital info if needed
+      hospitalAddress: formData.hospitalAddress,
+      hospitalNumber: formData.hospitalNumber,
+      availableDays: [],
+      availableTime: ''
+    });
+    setCurrentStep(1);
+    
+    Router.refresh();
+    Router.push("/clinic/doctors")
+  } catch (err) {
+    console.log(err.response?.data?.message || 'Registration failed');
+  }
+};
+ const nextStep = (e) => {
+  e.preventDefault(); // Prevent form submission
+  if (currentStep < 3) setCurrentStep(currentStep + 1);
+};
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -166,20 +315,38 @@ export default function AddDoctorPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                 <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    <FileText className="inline w-4 h-4 mr-2" />
-                    Profile Image URL
+                    <Upload className="inline w-4 h-4 mr-2" />
+                    Profile Image
                   </label>
                   <input
-                    type="url"
-                    name="profileImage"
-                    value={formData.profileImage}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
-                    placeholder="https://example.com/profile.jpg"
-                    required
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileChange}
+                    accept="image/*"
+                    className="hidden"
+                    id="profileImage"
                   />
+                  <div className="flex items-center gap-4">
+                    <button
+                      type="button"
+                      onClick={triggerFileInput}
+                      className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+                    >
+                      Choose Image
+                    </button>
+                    {imagePreview && (
+                      <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-gray-200">
+                        <img 
+                          src={imagePreview} 
+                          alt="Profile preview" 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {isSubmitting && <p className="text-sm text-gray-500">Uploading image...</p>}
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
@@ -349,7 +516,7 @@ export default function AddDoctorPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     License Number
                   </label>
@@ -362,7 +529,7 @@ export default function AddDoctorPage() {
                     placeholder="Medical license number"
                     required
                   />
-                </div>
+                </div> */}
 
                 <div className="space-y-4">
                   <label className="block text-sm font-semibold text-gray-700">
@@ -504,22 +671,22 @@ export default function AddDoctorPage() {
                 Previous
               </button>
               
-              {currentStep < 3 ? (
-                <button
-                  type="button"
-                  onClick={nextStep}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
-                >
-                  Next Step
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
-                >
-                  Add Doctor
-                </button>
-              )}
+           {currentStep < 3 ? (
+  <button
+    type="button"
+    onClick={nextStep}
+    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+  >
+    Next Step
+  </button>
+) : (
+  <button
+    type="submit"
+    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
+  >
+    Add Doctor
+  </button>
+)}
             </div>
           </div>
         </form>

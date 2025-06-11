@@ -1,44 +1,44 @@
 'use client';
-import { useState } from 'react';
+import { useState ,useEffect} from 'react';
 import { Search, Plus, Phone, Mail, Star, Calendar, Award, MapPin, Edit, Eye, ChevronDown, ChevronUp } from 'lucide-react';
 import Link from 'next/link';
 
-const doctors = [
-  {
-    id: 1,
-    name: 'Dr. Sarah Johnson',
-    specialty: 'Cardiologist',
-    experience: '15+ Years',
-    rating: 4.9,
-    location: 'Apollo Hospital, New York',
-    availability: ['Mon', 'Wed', 'Fri'],
-    degrees: ['MBBS', 'MD'],
-    fee: '$100',
-    status: 'Active',
-    phone: '1234567890',
-    email: 'sarah.j@clinic.com',
-    image: '/doctors/doctor-1.jpg',
-    bio: 'Board-certified cardiologist with extensive experience in interventional procedures. Specializes in preventive cardiology and heart failure management.',
-    languages: ['English', 'Spanish']
-  },
-  {
-    id: 2,
-    name: 'Dr. Alan Smith',
-    specialty: 'Dermatologist',
-    experience: '10 Years',
-    rating: 4.6,
-    location: 'City Clinic, LA',
-    availability: ['Tue', 'Thu'],
-    degrees: ['MBBS', 'DDVL'],
-    fee: '$80',
-    status: 'On Leave',
-    phone: '9876543210',
-    email: 'alan.s@clinic.com',
-    image: '/doctors/doctor-2.jpg',
-    bio: 'Cosmetic dermatologist specializing in acne treatments and anti-aging procedures. Certified in laser therapies and skin rejuvenation.',
-    languages: ['English', 'French']
-  }
-];
+// const doctors = [
+//   {
+//     id: 1,
+//     name: 'Dr. Sarah Johnson',
+//     specialty: 'Cardiologist',
+//     experience: '15+ Years',
+//     rating: 4.9,
+//     location: 'Apollo Hospital, New York',
+//     availability: ['Mon', 'Wed', 'Fri'],
+//     degrees: ['MBBS', 'MD'],
+//     fee: '$100',
+//     status: 'Active',
+//     phone: '1234567890',
+//     email: 'sarah.j@clinic.com',
+//     image: '/doctors/doctor-1.jpg',
+//     bio: 'Board-certified cardiologist with extensive experience in interventional procedures. Specializes in preventive cardiology and heart failure management.',
+//     languages: ['English', 'Spanish']
+//   },
+//   {
+//     id: 2,
+//     name: 'Dr. Alan Smith',
+//     specialty: 'Dermatologist',
+//     experience: '10 Years',
+//     rating: 4.6,
+//     location: 'City Clinic, LA',
+//     availability: ['Tue', 'Thu'],
+//     degrees: ['MBBS', 'DDVL'],
+//     fee: '$80',
+//     status: 'On Leave',
+//     phone: '9876543210',
+//     email: 'alan.s@clinic.com',
+//     image: '/doctors/doctor-2.jpg',
+//     bio: 'Cosmetic dermatologist specializing in acne treatments and anti-aging procedures. Certified in laser therapies and skin rejuvenation.',
+//     languages: ['English', 'French']
+//   }
+// ];
 
 const statusColors = {
   Active: 'bg-emerald-100 text-emerald-800',
@@ -49,13 +49,52 @@ export default function DoctorsPage() {
   const [query, setQuery] = useState('');
   const [expandedDoctor, setExpandedDoctor] = useState(null);
   const [actionMenu, setActionMenu] = useState(null);
-
+const[doctors,setDoctors]=useState([]);
   const filtered = doctors.filter((d) =>
     d.name.toLowerCase().includes(query.toLowerCase()) ||
     d.specialty.toLowerCase().includes(query.toLowerCase()) ||
     d.location.toLowerCase().includes(query.toLowerCase())
   );
-
+useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+  const data=JSON.parse(savedUser);
+    console.log("clinic user",data);
+     fetchReceptionists(data.id);
+   
+    
+  }, []);
+  const fetchReceptionists = async (id) => {
+  try {
+    const response = await fetch(`https://practo-backend.vercel.app/api/clinic/fetch-doctor-clinicId/${id}`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch receptionists');
+    }
+    const data = await response.json();
+    
+    // Transform the API data to match your component's expected structure
+    const transformedDoctors = data.doctor.map(doc => ({
+      id: doc._id || doc.id, // Use whichever ID field your API returns
+      name: `${doc.firstName} ${doc.lastName}`,
+      specialty: doc.specialty,
+      experience: `${doc.experience} Years`,
+      rating: 4.5, // Default value since API doesn't provide this
+      location: doc.hospitalAddress,
+     availability: doc.available?.days || ['Mon', 'Wed', 'Fri'], // Default value
+      degrees: doc.qualifications || [],
+      fee: `₹${doc.consultantFee}`,
+      status: "Active",
+      phone: doc.phone,
+      email: doc.email,
+      image: doc.profileImage || '/doctors/default-doctor.jpg', // Fallback image
+      bio: `Specialist in ${doc.specialty} with ${doc.experience} years of experience at ${doc.hospital}.`,
+      languages: ['English'] // Default value
+    }));
+    
+    setDoctors(transformedDoctors);
+  } catch (err) {
+    console.error('Error fetching receptionists:', err);
+  } 
+};
   const toggleExpand = (id) => {
     setExpandedDoctor(expandedDoctor === id ? null : id);
   };
