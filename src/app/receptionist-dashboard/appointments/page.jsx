@@ -299,211 +299,237 @@ const AppointmentsDashboard = () => {
           )}
         </div>
 
-        {/* Modern Appointments Table */}
+        {/* Enhanced Appointments Table */}
         <div className="bg-white rounded-xl shadow-sm overflow-hidden border border-blue-100">
-          <div className="p-5">
-            <div className="flex items-center justify-between mb-5">
+          {/* Table Header */}
+          <div className="p-5 border-b border-blue-100">
+            <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-800">Today's Appointments</h3>
-              <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1.5 rounded-full flex items-center gap-1">
-                <span>{filteredAppointments.length}</span>
-                <span>{filteredAppointments.length === 1 ? 'appointment' : 'appointments'}</span>
+              <div className="text-xs text-blue-600 font-medium bg-blue-50 px-3 py-1.5 rounded-full">
+                {filteredAppointments.length} {filteredAppointments.length === 1 ? 'appointment' : 'appointments'}
               </div>
             </div>
-            
-            {/* Table Header - Desktop */}
-            <div className="hidden md:grid grid-cols-12 gap-4 px-5 py-3.5 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 rounded-lg mb-2">
-              <div className="col-span-3 text-xs font-semibold text-blue-700 uppercase tracking-wider">Patient</div>
-              <div className="col-span-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Doctor</div>
-              <div className="col-span-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Date</div>
-              <div className="col-span-1 text-xs font-semibold text-blue-700 uppercase tracking-wider">Time</div>
-              <div className="col-span-2 text-xs font-semibold text-blue-700 uppercase tracking-wider">Reason</div>
-              <div className="col-span-1 text-xs font-semibold text-blue-700 uppercase tracking-wider">Status</div>
-              <div className="col-span-1"></div>
-            </div>
+          </div>
 
-            {/* Appointments List */}
-            <div className="space-y-3">
-              {filteredAppointments.length > 0 ? (
-                filteredAppointments.map(appointment => (
-                  <div key={appointment.id} className="border border-blue-100 rounded-xl overflow-hidden hover:shadow-xs transition-all duration-200 bg-white">
-                    {/* Appointment Summary */}
-                    <div 
-                      className="grid grid-cols-12 gap-3 items-center p-5 hover:bg-blue-50/20 cursor-pointer transition-colors"
-                      onClick={() => setExpandedAppointment(expandedAppointment === appointment.id ? null : appointment.id)}
-                    >
-                      {/* Patient Column */}
-                      <div className="col-span-12 md:col-span-3 flex items-center gap-3">
-                        <div className="relative">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-xs">
-                            <User className="text-blue-600 w-5 h-5" />
-                          </div>
-                          <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${appointment.status === 'confirmed' ? 'bg-green-400' : appointment.status === 'pending' ? 'bg-amber-400' : 'bg-red-400'}`}></span>
+          {/* Column Headers - Desktop */}
+          <div className="hidden md:grid grid-cols-12 gap-4 px-6 py-3 bg-blue-50/50 border-b border-blue-100">
+            <div className="col-span-3 text-xs font-medium text-blue-600 uppercase tracking-wider">Patient</div>
+            <div className="col-span-2 text-xs font-medium text-blue-600 uppercase tracking-wider">Doctor</div>
+            <div className="col-span-2 text-xs font-medium text-blue-600 uppercase tracking-wider">Date & Time</div>
+            <div className="col-span-3 text-xs font-medium text-blue-600 uppercase tracking-wider">Reason</div>
+            <div className="col-span-1 text-xs font-medium text-blue-600 uppercase tracking-wider">Status</div>
+            <div className="col-span-1"></div>
+          </div>
+
+          {/* Appointments List */}
+          <div className="divide-y divide-blue-100">
+            {filteredAppointments.length > 0 ? (
+              filteredAppointments.map(appointment => (
+                <div 
+                  key={appointment.id} 
+                  className={`transition-all duration-200 ${expandedAppointment === appointment.id ? 'bg-blue-50/30' : 'hover:bg-blue-50/20'}`}
+                >
+                  {/* Appointment Row */}
+                  <div 
+                    className="grid grid-cols-12 gap-4 items-center p-4 md:p-6 cursor-pointer"
+                    onClick={() => setExpandedAppointment(expandedAppointment === appointment.id ? null : appointment.id)}
+                  >
+                    {/* Patient Column */}
+                    <div className="col-span-12 md:col-span-3 flex items-center gap-4">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border-2 border-white shadow-xs">
+                          <User className="text-blue-600 w-5 h-5" />
                         </div>
+                        <span className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${statusColors[appointment.status].replace('text', 'bg').split(' ')[0]}`}></span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{appointment.patient.name}</p>
+                        <p className="text-xs text-gray-500 flex items-center gap-1.5 mt-1">
+                          <Phone className="w-3 h-3 flex-shrink-0" />
+                          <span className="truncate">{appointment.patient.phone}</span>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Doctor Column */}
+                    <div className="col-span-6 md:col-span-2">
+                      <div className="flex items-center gap-2">
+                        <Stethoscope className="text-indigo-500 w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm text-gray-700 truncate">
+                          {appointment.doctor}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Date/Time Column */}
+                    <div className="col-span-6 md:col-span-2">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="text-blue-400 w-4 h-4 flex-shrink-0" />
                         <div>
-                          <p className="text-sm font-medium text-gray-800">{appointment.patient.name}</p>
+                          <p className="text-sm font-medium text-gray-700">{appointment.date}</p>
                           <p className="text-xs text-gray-500 flex items-center gap-1">
-                            <Phone className="w-3 h-3" />
-                            <span>{appointment.patient.phone}</span>
+                            <Clock className="w-3 h-3" />
+                            {appointment.time}
                           </p>
                         </div>
                       </div>
-                      
-                      {/* Doctor Column */}
-                      <div className="col-span-6 md:col-span-2">
-                        <div className="flex items-center gap-2">
-                          <Stethoscope className="text-indigo-500 w-4 h-4" />
-                          <span className="text-sm text-gray-700 font-medium truncate">
-                            {appointment.doctor}
-                          </span>
-                        </div>
-                      </div>
-                      
-                      {/* Date Column */}
-                      <div className="col-span-3 md:col-span-2 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <Calendar className="text-blue-400 w-4 h-4" />
-                          <span className="font-medium">{appointment.date}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Time Column */}
-                      <div className="col-span-3 md:col-span-1 text-sm">
-                        <div className="flex items-center gap-1.5">
-                          <Clock className="text-blue-400 w-4 h-4" />
-                          <span className="font-medium">{appointment.time}</span>
-                        </div>
-                      </div>
-                      
-                      {/* Reason Column (Desktop only) */}
-                      <div className="hidden md:block col-span-2 text-sm text-gray-600 truncate">
+                    </div>
+                    
+                    {/* Reason Column */}
+                    <div className="hidden md:block col-span-3">
+                      <p className="text-sm text-gray-600 truncate">
                         {appointment.reason}
-                      </div>
-                      
-                      {/* Enhanced Status Column */}
-                      <div className="col-span-6 md:col-span-1">
-                        <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium ${statusColors[appointment.status]} shadow-xs`}>
-                          {statusIcons[appointment.status]}
-                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                        </div>
-                      </div>
-                      
-                      {/* Actions Column */}
-                      <div className="col-span-6 md:col-span-1 flex justify-end">
-                        <button className="p-1 text-blue-400 hover:text-blue-600 transition-colors">
-                          <MoreVertical size={18} />
-                        </button>
+                      </p>
+                    </div>
+                    
+                    {/* Status Column */}
+                    <div className="col-span-6 md:col-span-1">
+                      <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${statusColors[appointment.status]} shadow-xs`}>
+                        {statusIcons[appointment.status]}
+                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                       </div>
                     </div>
+                    
+                    {/* Actions Column */}
+                    <div className="col-span-6 md:col-span-1 flex justify-end">
+                      <button 
+                        className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors rounded-full hover:bg-gray-100"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // Add action menu functionality here
+                        }}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+                    </div>
+                  </div>
 
-                    {/* Expanded Details */}
-                    {expandedAppointment === appointment.id && (
-                      <div className="p-5 border-t border-blue-100 bg-gradient-to-br from-blue-50/30 to-indigo-50/30 animate-fadeIn">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                          {/* Patient Details */}
-                          <div className="space-y-4">
-                            <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2 text-blue-600">
-                              <User className="w-4 h-4" />
-                              Patient Details
-                            </h4>
-                            <div className="space-y-3">
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-lg shadow-xs">
-                                  <Phone className="text-blue-500 w-4 h-4" />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">Phone</p>
-                                  <p className="text-sm font-medium text-gray-700">{appointment.patient.phone}</p>
-                                </div>
+                  {/* Expanded Details */}
+                  {expandedAppointment === appointment.id && (
+                    <div className="px-6 pb-6 pt-2 animate-fadeIn">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        {/* Patient Details Card */}
+                        <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-xs">
+                          <h4 className="text-sm font-medium text-blue-600 mb-3 flex items-center gap-2">
+                            <User className="w-4 h-4" />
+                            Patient Information
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                              <div className="p-1.5 bg-blue-50 rounded-lg mt-0.5">
+                                <Phone className="text-blue-500 w-4 h-4" />
                               </div>
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-lg shadow-xs">
-                                  <Mail className="text-blue-500 w-4 h-4" />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">Email</p>
-                                  <p className="text-sm font-medium text-gray-700">{appointment.patient.email}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white rounded-lg shadow-xs">
-                                  <MapPin className="text-blue-500 w-4 h-4" />
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">Address</p>
-                                  <p className="text-sm font-medium text-gray-700">{appointment.patient.address}</p>
-                                </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Phone</p>
+                                <p className="text-sm font-medium text-gray-700">{appointment.patient.phone}</p>
                               </div>
                             </div>
-                          </div>
-                          
-                          {/* Appointment Details */}
-                          <div className="space-y-4">
-                            <h4 className="text-sm font-medium text-gray-700 flex items-center gap-2 text-blue-600">
-                              <Calendar className="w-4 h-4" />
-                              Appointment Details
-                            </h4>
-                            <div className="space-y-3">
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-xs text-gray-500">Date</p>
-                                  <p className="text-sm font-medium text-gray-700">{appointment.date}</p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-gray-500">Time</p>
-                                  <p className="text-sm font-medium text-gray-700">{appointment.time}</p>
-                                </div>
+                            <div className="flex items-start gap-3">
+                              <div className="p-1.5 bg-blue-50 rounded-lg mt-0.5">
+                                <Mail className="text-blue-500 w-4 h-4" />
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500">Reason</p>
-                                <p className="text-sm font-medium text-gray-700">{appointment.reason}</p>
+                                <p className="text-xs text-gray-500">Email</p>
+                                <p className="text-sm font-medium text-gray-700">{appointment.patient.email}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-start gap-3">
+                              <div className="p-1.5 bg-blue-50 rounded-lg mt-0.5">
+                                <MapPin className="text-blue-500 w-4 h-4" />
                               </div>
                               <div>
-                                <p className="text-xs text-gray-500">Notes</p>
-                                <p className="text-sm font-medium text-gray-700">{appointment.notes}</p>
+                                <p className="text-xs text-gray-500">Address</p>
+                                <p className="text-sm font-medium text-gray-700">{appointment.patient.address}</p>
                               </div>
                             </div>
                           </div>
                         </div>
                         
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-blue-200">
-                          <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2">
-                            <Check size={16} />
-                            Confirm
-                          </button>
-                          <button className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all shadow-xs border border-gray-200 flex items-center gap-2">
-                            <Calendar size={16} />
-                            Reschedule
-                          </button>
-                          <button className="px-4 py-2 bg-white hover:bg-gray-50 text-rose-600 rounded-lg text-sm font-medium transition-all shadow-xs border border-rose-200 flex items-center gap-2">
-                            <X size={16} />
-                            Cancel
-                          </button>
-                          <button 
-                            className="px-4 py-2 bg-white hover:bg-gray-50 text-green-600 rounded-lg text-sm font-medium transition-all shadow-xs border border-green-200 flex items-center gap-2 ml-auto"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewFullProfile(appointment.patient);
-                            }}
-                          >
-                            View Full Profile
-                            <ArrowRight size={16} />
-                          </button>
+                        {/* Appointment Details Card */}
+                        <div className="bg-white p-4 rounded-lg border border-blue-100 shadow-xs">
+                          <h4 className="text-sm font-medium text-blue-600 mb-3 flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            Appointment Details
+                          </h4>
+                          <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4">
+                              <div>
+                                <p className="text-xs text-gray-500">Date</p>
+                                <p className="text-sm font-medium text-gray-700">{appointment.date}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-gray-500">Time</p>
+                                <p className="text-sm font-medium text-gray-700">{appointment.time}</p>
+                              </div>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Reason</p>
+                              <p className="text-sm font-medium text-gray-700">{appointment.reason}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Notes</p>
+                              <p className="text-sm font-medium text-gray-700">{appointment.notes || 'No notes'}</p>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                    )}
-                  </div>
-                ))
-              ) : (
-                <div className="p-8 text-center border border-blue-100 rounded-lg bg-blue-50/30">
-                  <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-                    <Search className="text-blue-500 w-6 h-6" />
-                  </div>
-                  <h4 className="text-lg font-medium text-gray-700 mb-1">No appointments found</h4>
-                  <p className="text-sm text-gray-500">Try adjusting your search or filter criteria</p>
+                      
+                      {/* Action Buttons */}
+                      <div className="flex flex-wrap gap-3 mt-6 pt-4 border-t border-blue-200">
+                        <button 
+                          className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-sm font-medium transition-all shadow-sm flex items-center gap-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Confirm logic here
+                          }}
+                        >
+                          <Check size={16} />
+                          Confirm
+                        </button>
+                        <button 
+                          className="px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all shadow-xs border border-gray-200 flex items-center gap-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Reschedule logic here
+                          }}
+                        >
+                          <Calendar size={16} />
+                          Reschedule
+                        </button>
+                        <button 
+                          className="px-4 py-2 bg-white hover:bg-gray-50 text-rose-600 rounded-lg text-sm font-medium transition-all shadow-xs border border-rose-200 flex items-center gap-2"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            // Cancel logic here
+                          }}
+                        >
+                          <X size={16} />
+                          Cancel
+                        </button>
+                        <button 
+                          className="px-4 py-2 bg-white hover:bg-gray-50 text-green-600 rounded-lg text-sm font-medium transition-all shadow-xs border border-green-200 flex items-center gap-2 ml-auto"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewFullProfile(appointment.patient);
+                          }}
+                        >
+                          View Full Profile
+                          <ArrowRight size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              ))
+            ) : (
+              <div className="p-8 text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
+                  <Search className="text-blue-500 w-6 h-6" />
+                </div>
+                <h4 className="text-lg font-medium text-gray-700 mb-1">No appointments found</h4>
+                <p className="text-sm text-gray-500">Try adjusting your search or filter criteria</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
