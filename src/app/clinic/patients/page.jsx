@@ -12,7 +12,7 @@ import { Dialog } from '@headlessui/react';
 const InfoCard = ({ icon, title, value, className = '' }) => (
   <div className={`bg-white p-4 rounded-xl border border-gray-200 shadow-xs ${className}`}>
     <div className="flex items-center gap-3 mb-2">
-      <div className="bg-indigo-100 text-indigo-600 p-1.5 rounded-lg">
+      <div className="bg-blue-100 text-blue-600 p-1.5 rounded-lg">
         {icon}
       </div>
       <p className="text-sm font-medium text-gray-500">{title}</p>
@@ -38,7 +38,7 @@ const StatusBadge = ({ status }) => {
 
 const TimelineItem = ({ date, title, description, active = false }) => (
   <div className="relative">
-    <div className={`absolute -left-7 top-1 w-4 h-4 rounded-full border-4 ${active ? 'border-indigo-600 bg-white' : 'border-gray-300 bg-white'}`} />
+    <div className={`absolute -left-7 top-1 w-4 h-4 rounded-full border-4 ${active ? 'border-blue-600 bg-white' : 'border-gray-300 bg-white'}`} />
     <div className="text-sm text-gray-500">{formatDate(date)}</div>
     <h6 className="font-medium text-gray-800 mt-1">{title}</h6>
     <p className="text-sm text-gray-600 mt-1">{description}</p>
@@ -49,7 +49,7 @@ const MedicationCard = ({ name, dosage, frequency, remaining, lastTaken }) => (
   <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-xs hover:shadow-sm transition-shadow">
     <div className="flex justify-between items-start mb-3">
       <h5 className="font-bold text-gray-800">{name}</h5>
-      <span className="bg-indigo-50 text-indigo-600 text-xs px-2 py-1 rounded-full">{dosage}</span>
+      <span className="bg-blue-50 text-blue-600 text-xs px-2 py-1 rounded-full">{dosage}</span>
     </div>
     <div className="space-y-2 text-sm">
       <p className="text-gray-600 flex items-center gap-2">
@@ -66,7 +66,7 @@ const MedicationCard = ({ name, dosage, frequency, remaining, lastTaken }) => (
       </p>
     </div>
     <div className="mt-4 pt-3 border-t border-gray-100 flex justify-between items-center">
-      <button className="text-xs bg-indigo-50 text-indigo-600 px-2.5 py-1 rounded-full hover:bg-indigo-100 transition">
+      <button className="text-xs bg-blue-50 text-blue-600 px-2.5 py-1 rounded-full hover:bg-blue-100 transition">
         Log Dose
       </button>
       <button className="text-xs text-gray-500 hover:text-gray-700 transition">
@@ -270,7 +270,7 @@ export default function PatientsPage() {
   const sections = ["Personal Info", "Treatment", "Prescription", "Tablets List"];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 p-6">
       {/* Custom scrollbar styles */}
       <style jsx global>{`
         ::-webkit-scrollbar {
@@ -279,30 +279,30 @@ export default function PatientsPage() {
         }
         
         ::-webkit-scrollbar-track {
-          background: rgba(99, 102, 241, 0.1);
+          background: rgba(59, 130, 246, 0.1);
           border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb {
-          background: rgba(99, 102, 241, 0.5);
+          background: rgba(59, 130, 246, 0.5);
           border-radius: 10px;
         }
         
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(99, 102, 241, 0.7);
+          background: rgba(59, 130, 246, 0.7);
         }
         
         /* Firefox */
         * {
           scrollbar-width: thin;
-          scrollbar-color: rgba(99, 102, 241, 0.5) rgba(99, 102, 241, 0.1);
+          scrollbar-color: rgba(59, 130, 246, 0.5) rgba(59, 130, 246, 0.1);
         }
       `}</style>
 
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div>
-          <h1 className="text-3xl font-bold text-purple-800">Patients</h1>
+          <h1 className="text-3xl font-bold text-blue-800">Patients</h1>
           <p className="text-gray-600">Manage all patient records and details</p>
         </div>
 
@@ -321,7 +321,7 @@ export default function PatientsPage() {
                     setSearchTerm(e.target.value);
                     setShowSuggestions(true);
                   }}
-                  className="w-full pl-10 pr-4 py-2 border border-transparent bg-purple-100/50 focus:bg-purple-200 focus:border-purple-400 rounded-lg focus:ring-2 focus:ring-purple-400 transition"
+                  className="w-full pl-10 pr-4 py-2 border border-transparent bg-blue-100/50 focus:bg-blue-200 focus:border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-400 transition"
                 />
 
                 {/* Suggestions Dropdown */}
@@ -330,7 +330,7 @@ export default function PatientsPage() {
                     {suggestions.map((name, idx) => (
                       <li
                         key={idx}
-                        className="px-4 py-2 cursor-pointer hover:bg-purple-100"
+                        className="px-4 py-2 cursor-pointer hover:bg-blue-100"
                         onClick={() => {
                           setSearchTerm(name);
                           setShowSuggestions(false);
@@ -374,7 +374,7 @@ export default function PatientsPage() {
         {/* Table */}
         <div className="bg-white rounded-lg shadow-md overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-purple-100 text-purple-800">
+            <thead className="bg-blue-100 text-blue-800">
               <tr>
                 <th className="text-left px-6 py-3">Name</th>
                 <th className="text-left px-6 py-3">Treatment</th>
@@ -385,7 +385,7 @@ export default function PatientsPage() {
             </thead>
             <tbody>
               {filteredPatients.map((p) => (
-                <tr key={p.id} className="hover:bg-purple-50 transition-colors">
+                <tr key={p.id} className="hover:bg-blue-50 transition-colors">
                   <td className="px-6 py-3 font-medium text-gray-800">{p.name}</td>
                   <td className="px-6 py-3">{p.treatment}</td>
                   <td className="px-6 py-3">{p.doctor}</td>
@@ -424,7 +424,7 @@ export default function PatientsPage() {
           {selectedPatient && (
             <Dialog.Panel className="bg-white max-w-6xl w-full shadow-2xl grid grid-cols-1 md:grid-cols-4 overflow-hidden rounded-2xl transform transition-all duration-300 ease-[cubic-bezier(0.33,1,0.68,1)] scale-95 hover:scale-100">
               {/* Sidebar */}
-              <aside className="bg-gradient-to-br from-indigo-600 to-purple-700 text-white p-6 space-y-6 sticky top-0 h-[80vh] overflow-y-auto rounded-l-2xl border-r border-white/10 backdrop-blur-md scrollbar-thin">
+              <aside className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 space-y-6 sticky top-0 h-[80vh] overflow-y-auto rounded-l-2xl border-r border-white/10 backdrop-blur-md scrollbar-thin">
                 <div className="flex justify-between items-center mb-6">
                   <div>
                     <h3 className="text-2xl font-bold truncate max-w-[80%]">{selectedPatient.name}</h3>
@@ -472,11 +472,11 @@ export default function PatientsPage() {
                         className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200
                           ${
                             modalSection === section
-                              ? 'bg-white text-indigo-600 font-semibold shadow-lg'
+                              ? 'bg-white text-blue-600 font-semibold shadow-lg'
                               : 'hover:bg-white/10 focus:bg-white/10 focus:outline-none text-white/90 hover:text-white'
                           }`}
                       >
-                        <Icon className={`w-4 h-4 ${modalSection === section ? 'text-indigo-600' : 'text-white/70'}`} />
+                        <Icon className={`w-4 h-4 ${modalSection === section ? 'text-blue-600' : 'text-white/70'}`} />
                         {section}
                       </button>
                     );
@@ -492,10 +492,10 @@ export default function PatientsPage() {
                     <section className="space-y-6">
                       <div className="flex items-center justify-between mb-6">
                         <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <User className="w-5 h-5 text-indigo-600" />
+                          <User className="w-5 h-5 text-blue-600" />
                           Personal Information
                         </h4>
-                        <button className="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition">
+                        <button className="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-blue-100 transition">
                           <Edit className="w-3.5 h-3.5" />
                           Edit
                         </button>
@@ -514,8 +514,8 @@ export default function PatientsPage() {
                         />
                       </div>
                       
-                      <div className="bg-indigo-50/50 p-5 rounded-xl border border-indigo-100 mt-6">
-                        <h5 className="font-medium text-indigo-700 mb-2 flex items-center gap-2">
+                      <div className="bg-blue-50/50 p-5 rounded-xl border border-blue-100 mt-6">
+                        <h5 className="font-medium text-blue-700 mb-2 flex items-center gap-2">
                           <Shield className="w-4 h-4" />
                           Emergency Contact
                         </h5>
@@ -542,7 +542,7 @@ export default function PatientsPage() {
                     <section className="space-y-6">
                       <div className="flex items-center justify-between mb-6">
                         <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <Stethoscope className="w-5 h-5 text-indigo-600" />
+                          <Stethoscope className="w-5 h-5 text-blue-600" />
                           Treatment Details
                         </h4>
                         <StatusBadge status={selectedPatient.status || 'In Progress'} />
@@ -568,10 +568,10 @@ export default function PatientsPage() {
                       
                       <div className="mt-8">
                         <h5 className="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                          <Activity className="w-4 h-4 text-indigo-600" />
+                          <Activity className="w-4 h-4 text-blue-600" />
                           Treatment Timeline
                         </h5>
-                        <div className="relative pl-6 border-l-2 border-indigo-200 space-y-6">
+                        <div className="relative pl-6 border-l-2 border-blue-200 space-y-6">
                           <TimelineItem 
                             date="2023-10-15" 
                             title="Initial Consultation" 
@@ -598,17 +598,17 @@ export default function PatientsPage() {
                     <section className="space-y-6">
                       <div className="flex items-center justify-between mb-6">
                         <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <Pill className="w-5 h-5 text-indigo-600" />
+                          <Pill className="w-5 h-5 text-blue-600" />
                           Medical Prescription
                         </h4>
-                        <button className="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition">
+                        <button className="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-blue-100 transition">
                           <Printer className="w-3.5 h-3.5" />
                           Print
                         </button>
                       </div>
                       
                       <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div className="bg-indigo-600 text-white p-4">
+                        <div className="bg-blue-600 text-white p-4">
                           <div className="flex justify-between items-center">
                             <div>
                               <p className="text-sm opacity-80">Prescription #RX-{Math.floor(Math.random() * 10000)}</p>
@@ -632,7 +632,7 @@ export default function PatientsPage() {
                             <div className="space-y-4">
                               {selectedPatient.tablets.map((tablet, idx) => (
                                 <div key={idx} className="flex items-start gap-4">
-                                  <div className="bg-indigo-100 text-indigo-600 p-2 rounded-lg">
+                                  <div className="bg-blue-100 text-blue-600 p-2 rounded-lg">
                                     <Pill className="w-4 h-4" />
                                   </div>
                                   <div className="flex-1">
@@ -675,11 +675,11 @@ export default function PatientsPage() {
                     <section className="space-y-6">
                       <div className="flex items-center justify-between mb-6">
                         <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <Pill className="w-5 h-5 text-indigo-600" />
+                          <Pill className="w-5 h-5 text-blue-600" />
                           Medication List
                         </h4>
                         <div className="flex items-center gap-2">
-                          <button className="text-sm bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-indigo-100 transition">
+                          <button className="text-sm bg-blue-50 text-blue-600 px-3 py-1.5 rounded-full flex items-center gap-1 hover:bg-blue-100 transition">
                             <Plus className="w-3.5 h-3.5" />
                             Add Medication
                           </button>
@@ -701,7 +701,7 @@ export default function PatientsPage() {
                       
                       <div className="mt-8">
                         <h5 className="font-medium text-gray-700 mb-4 flex items-center gap-2">
-                          <Clock className="w-4 h-4 text-indigo-600" />
+                          <Clock className="w-4 h-4 text-blue-600" />
                           Medication Schedule
                         </h5>
                         <div className="bg-white rounded-xl border border-gray-200 overflow-hidden overflow-y-auto max-h-96 scrollbar-thin">

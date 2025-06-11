@@ -17,8 +17,8 @@ const navigation = [
   { name: 'Add Patient', href: '/receptionist-dashboard/patients/add', icon: UserPlus },
   { name: 'View Patients', href: '/receptionist-dashboard/patients', icon: Users },
   { name: 'Appointments', href: '/receptionist-dashboard/appointments', icon: Calendar },
-  { name: 'Messages', href: '/receptionist-dashboard/messages', icon: MessageSquare },
-  { name: 'Billing', href: '/receptionist-dashboard/billing', icon: CreditCard },
+  { name: 'Messages', href: '/receptionist-dashboard/Messages', icon: MessageSquare },
+  { name: 'Billing', href: '/receptionist-dashboard/Billing', icon: CreditCard },
 ];
 
 export default function Sidebar({ isOpen, onClose }) {
