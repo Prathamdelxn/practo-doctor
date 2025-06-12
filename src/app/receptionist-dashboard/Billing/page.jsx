@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { 
   FiDownload, 
   FiPrinter, 
@@ -10,13 +10,12 @@ import {
   FiUser,
   FiClock,
   FiX,
-  FiFileText,
   FiEye
 } from 'react-icons/fi';
 import { useReactToPrint } from 'react-to-print';
 
 export default function Billing() {
-  // Sample invoice data with two more entries
+  // Sample invoice data
   const [invoices, setInvoices] = useState([
     {
       id: 'INV-001',
@@ -68,11 +67,11 @@ export default function Billing() {
   ]);
 
   const [selectedInvoice, setSelectedInvoice] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const printRef = useRef();
-  const modalPrintRef = useRef();
 
-  // Handle print from main view
+  // Handle print functionality
   const handlePrint = useReactToPrint({
     content: () => printRef.current,
     pageStyle: `
@@ -82,75 +81,160 @@ export default function Billing() {
         .no-print { display: none !important; }
       }
     `,
-    removeAfterPrint: true
+    removeAfterPrint: true,
+    onBeforePrint: () => setIsPrintModalOpen(false)
   });
 
-  // Handle print from modal
-  const handleModalPrint = useReactToPrint({
-    content: () => modalPrintRef.current,
-    pageStyle: `
-      @page { size: auto; margin: 10mm; }
-      @media print {
-        body { -webkit-print-color-adjust: exact; }
-        .no-print { display: none !important; }
-      }
-    `,
-    removeAfterPrint: true
-  });
-
-  // Handle download as PDF
-  const handleDownload = () => {
-    try {
-      if (selectedInvoice) {
-        handleModalPrint();
-      } else {
-        handlePrint();
-      }
-    } catch (error) {
-      console.error('Error during download:', error);
-    }
+  // Open print preview modal
+  const openPrintModal = (invoice = null) => {
+    setSelectedInvoice(invoice);
+    setIsPrintModalOpen(true);
   };
 
   // Open invoice details modal
   const openInvoiceModal = (invoice) => {
     setSelectedInvoice(invoice);
-    setIsModalOpen(true);
+    setIsDetailsModalOpen(true);
   };
 
-  // Close modal
+  // Close modals
   const closeModal = () => {
-    setIsModalOpen(false);
+    setIsDetailsModalOpen(false);
+    setIsPrintModalOpen(false);
     setSelectedInvoice(null);
   };
 
+  // Handle download
+  const handleDownload = () => {
+    handlePrint();
+  };
+
+  // Common Invoice Content Component
+  const InvoiceContent = ({ invoice, isPrint = false, refProp }) => (
+    <div ref={isPrint ? refProp : null} className={`p-8 max-w-3xl mx-auto ${isPrint ? '' : 'bg-white rounded-xl shadow-lg'}`}>
+      <div className="border-b border-blue-200 pb-4 mb-6">
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-3xl font-bold text-blue-800">INVOICE</h1>
+            <p className="text-blue-600 mt-2">#{invoice?.id || 'INV-000'}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-blue-800 font-semibold">Your Company</p>
+            <p className="text-blue-600">123 Business Street</p>
+            <p className="text-blue-600">City, State 10001</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div>
+          <h2 className="text-lg font-semibold text-blue-800 mb-2">Bill To</h2>
+          <p className="text-blue-600">{invoice?.client || 'Client Name'}</p>
+        </div>
+        
+        <div className="text-right">
+          <div className="mb-2">
+            <span className="text-blue-600">Date: </span>
+            <span className="text-blue-800">{invoice?.date || '2023-01-01'}</span>
+          </div>
+          <div className="mb-2">
+            <span className="text-blue-600">Due Date: </span>
+            <span className="text-blue-800">{invoice?.dueDate || '2023-02-01'}</span>
+          </div>
+          <div>
+            <span className="text-blue-600">Status: </span>
+            <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+              ${invoice?.status === 'Paid' ? 'bg-green-100 text-green-800' : 
+                invoice?.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                invoice?.status === 'Overdue' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'}`}>
+              {invoice?.status || 'Pending'}
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="border border-blue-200 rounded-lg overflow-hidden mb-8 shadow-sm">
+        <table className="min-w-full divide-y divide-blue-200">
+          <thead className="bg-blue-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Item</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Qty</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Total</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-blue-200">
+            {invoice?.items?.map((item, index) => (
+              <tr key={index} className="hover:bg-blue-50">
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-900">{item.description}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{item.quantity}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">${item.price.toFixed(2)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">${(item.quantity * item.price).toFixed(2)}</td>
+              </tr>
+            )) || (
+              <tr>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-900">Sample Item</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">1</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">$100.00</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">$100.00</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+      
+      <div className="flex justify-end">
+        <div className="w-64">
+          <div className="flex justify-between py-2 border-b border-blue-200">
+            <span className="text-blue-600">Subtotal</span>
+            <span className="text-blue-800">${invoice?.amount?.toFixed(2) || '100.00'}</span>
+          </div>
+          <div className="flex justify-between py-2 border-b border-blue-200">
+            <span className="text-blue-600">Tax (0%)</span>
+            <span className="text-blue-800">$0.00</span>
+          </div>
+          <div className="flex justify-between py-2">
+            <span className="text-blue-800 font-semibold">Total</span>
+            <span className="text-blue-800 font-bold">${invoice?.amount?.toFixed(2) || '100.00'}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="mt-12 pt-6 border-t border-blue-200">
+        <p className="text-blue-600 text-sm">Thank you for your business!</p>
+        <p className="text-blue-600 text-sm">Please make payment by the due date to avoid late fees.</p>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+    <div className="bg-white rounded-xl shadow-sm border border-blue-100 overflow-hidden">
       {/* Header with Stats */}
       <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 border-b border-blue-200">
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-800">Billing Dashboard</h1>
+          <h1 className="text-2xl font-bold text-blue-800">Billing Dashboard</h1>
           <div className="flex space-x-2">
             <button 
-              onClick={handleDownload}
-              className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              onClick={() => openPrintModal()}
+              className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
             >
-              <FiDownload className="mr-2" /> Export
+              <FiPrinter className="mr-2" /> Print All
             </button>
             <button 
-              onClick={handlePrint}
-              className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+              onClick={handleDownload}
+              className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
             >
-              <FiPrinter className="mr-2" /> Print
+              <FiDownload className="mr-2" /> Export
             </button>
           </div>
         </div>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Total Revenue</p>
+                <p className="text-blue-500 text-sm">Total Revenue</p>
                 <p className="text-2xl font-bold text-blue-600">
                   ${invoices.reduce((sum, i) => sum + i.amount, 0).toLocaleString()}
                 </p>
@@ -161,10 +245,10 @@ export default function Billing() {
             </div>
           </div>
           
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Overdue Invoices</p>
+                <p className="text-blue-500 text-sm">Overdue Invoices</p>
                 <p className="text-2xl font-bold text-red-600">
                   ${invoices.filter(i => i.status === 'Overdue').reduce((sum, i) => sum + i.amount, 0).toLocaleString()}
                 </p>
@@ -175,10 +259,10 @@ export default function Billing() {
             </div>
           </div>
           
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-blue-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Pending Payments</p>
+                <p className="text-blue-500 text-sm">Pending Payments</p>
                 <p className="text-2xl font-bold text-yellow-600">
                   ${invoices.filter(i => i.status === 'Pending').reduce((sum, i) => sum + i.amount, 0).toLocaleString()}
                 </p>
@@ -195,20 +279,20 @@ export default function Billing() {
       <div className="p-6">
         <div className="flex justify-between items-center mb-4">
           <div className="relative w-64">
-            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-400" />
             <input 
               type="text" 
               placeholder="Search invoices..." 
-              className="pl-10 pr-4 py-2 w-full border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+              className="pl-10 pr-4 py-2 w-full border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
             />
           </div>
-          <button className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm">
+          <button className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm">
             <FiFilter className="mr-2" /> Filter
           </button>
         </div>
 
-        <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
-          <table className="min-w-full divide-y divide-gray-200">
+        <div className="overflow-x-auto rounded-xl shadow-sm border border-blue-100">
+          <table className="min-w-full divide-y divide-blue-200">
             <thead className="bg-blue-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Invoice #</th>
@@ -220,14 +304,14 @@ export default function Billing() {
                 <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y divide-blue-200">
               {invoices.map((invoice) => (
                 <tr key={invoice.id} className="hover:bg-blue-50 transition-colors duration-150">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{invoice.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{invoice.client}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{invoice.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{invoice.dueDate}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${invoice.amount.toFixed(2)}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-900">{invoice.id}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{invoice.client}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{invoice.date}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{invoice.dueDate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">${invoice.amount.toFixed(2)}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                       ${invoice.status === 'Paid' ? 'bg-green-100 text-green-800' : 
@@ -236,15 +320,18 @@ export default function Billing() {
                       {invoice.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">
                     <button 
                       onClick={() => openInvoiceModal(invoice)}
                       className="text-blue-600 hover:text-blue-800 mr-3 transition-colors duration-200"
                     >
                       <FiEye className="inline mr-1" /> View
                     </button>
-                    <button className="text-gray-600 hover:text-gray-800 transition-colors duration-200">
-                      <FiDownload className="inline" />
+                    <button 
+                      onClick={() => openPrintModal(invoice)}
+                      className="text-blue-600 hover:text-blue-800 transition-colors duration-200"
+                    >
+                      <FiPrinter className="inline" />
                     </button>
                   </td>
                 </tr>
@@ -254,15 +341,15 @@ export default function Billing() {
         </div>
       </div>
 
-      {/* Invoice Details Modal with Blurred Background */}
-      {isModalOpen && selectedInvoice && (
+      {/* Invoice Details Modal */}
+      {isDetailsModalOpen && selectedInvoice && (
         <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
-            <div className="flex justify-between items-center border-b border-gray-200 p-6 sticky top-0 bg-white z-10">
-              <h2 className="text-2xl font-bold text-gray-800">Invoice Details</h2>
+            <div className="flex justify-between items-center border-b border-blue-200 p-6 sticky top-0 bg-white z-10">
+              <h2 className="text-2xl font-bold text-blue-800">Invoice Details</h2>
               <button 
                 onClick={closeModal} 
-                className="text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                className="text-blue-500 hover:text-blue-700 transition-colors duration-200"
               >
                 <FiX size={24} />
               </button>
@@ -271,18 +358,18 @@ export default function Billing() {
             <div className="p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">From</h3>
-                  <p className="text-gray-600">Your Company Name</p>
-                  <p className="text-gray-600">123 Business Street</p>
-                  <p className="text-gray-600">City, State 10001</p>
-                  <p className="text-gray-600">Email: billing@yourcompany.com</p>
+                  <h3 className="text-lg font-semibold text-blue-800 mb-2">From</h3>
+                  <p className="text-blue-600">Your Company Name</p>
+                  <p className="text-blue-600">123 Business Street</p>
+                  <p className="text-blue-600">City, State 10001</p>
+                  <p className="text-blue-600">Email: billing@yourcompany.com</p>
                 </div>
                 
                 <div className="text-right">
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Invoice #{selectedInvoice.id}</h3>
-                  <p className="text-gray-600">Date: {selectedInvoice.date}</p>
-                  <p className="text-gray-600">Due Date: {selectedInvoice.dueDate}</p>
-                  <p className="text-gray-600">Status: 
+                  <h3 className="text-lg font-semibold text-blue-800 mb-2">Invoice #{selectedInvoice.id}</h3>
+                  <p className="text-blue-600">Date: {selectedInvoice.date}</p>
+                  <p className="text-blue-600">Due Date: {selectedInvoice.dueDate}</p>
+                  <p className="text-blue-600">Status: 
                     <span className={`ml-2 px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full 
                       ${selectedInvoice.status === 'Paid' ? 'bg-green-100 text-green-800' : 
                         selectedInvoice.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
@@ -294,12 +381,12 @@ export default function Billing() {
               </div>
               
               <div className="mb-8">
-                <h3 className="text-lg font-semibold text-gray-800 mb-2">Bill To</h3>
-                <p className="text-gray-600">{selectedInvoice.client}</p>
+                <h3 className="text-lg font-semibold text-blue-800 mb-2">Bill To</h3>
+                <p className="text-blue-600">{selectedInvoice.client}</p>
               </div>
               
-              <div className="border border-gray-200 rounded-lg overflow-hidden mb-8 shadow-sm">
-                <table className="min-w-full divide-y divide-gray-200">
+              <div className="border border-blue-200 rounded-lg overflow-hidden mb-8 shadow-sm">
+                <table className="min-w-full divide-y divide-blue-200">
                   <thead className="bg-blue-50">
                     <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Item</th>
@@ -308,13 +395,13 @@ export default function Billing() {
                       <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Total</th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
+                  <tbody className="bg-white divide-y divide-blue-200">
                     {selectedInvoice.items.map((item, index) => (
                       <tr key={index} className="hover:bg-blue-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{item.quantity}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${item.price.toFixed(2)}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${(item.quantity * item.price).toFixed(2)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-900">{item.description}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">{item.quantity}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">${item.price.toFixed(2)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-blue-600">${(item.quantity * item.price).toFixed(2)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -323,32 +410,32 @@ export default function Billing() {
               
               <div className="flex justify-end">
                 <div className="w-64">
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Subtotal</span>
-                    <span className="text-gray-800">${selectedInvoice.amount.toFixed(2)}</span>
+                  <div className="flex justify-between py-2 border-b border-blue-200">
+                    <span className="text-blue-600">Subtotal</span>
+                    <span className="text-blue-800">${selectedInvoice.amount.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between py-2 border-b border-gray-200">
-                    <span className="text-gray-600">Tax (0%)</span>
-                    <span className="text-gray-800">$0.00</span>
+                  <div className="flex justify-between py-2 border-b border-blue-200">
+                    <span className="text-blue-600">Tax (0%)</span>
+                    <span className="text-blue-800">$0.00</span>
                   </div>
                   <div className="flex justify-between py-2">
-                    <span className="text-gray-800 font-semibold">Total</span>
-                    <span className="text-gray-800 font-bold">${selectedInvoice.amount.toFixed(2)}</span>
+                    <span className="text-blue-800 font-semibold">Total</span>
+                    <span className="text-blue-800 font-bold">${selectedInvoice.amount.toFixed(2)}</span>
                   </div>
                 </div>
               </div>
             </div>
             
-            <div className="bg-gray-50 px-6 py-4 border-t border-gray-200 flex justify-end space-x-3 sticky bottom-0">
+            <div className="bg-blue-50 px-6 py-4 border-t border-blue-200 flex justify-end space-x-3 sticky bottom-0">
               <button 
-                onClick={handleModalPrint}
-                className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+                onClick={() => { closeModal(); openPrintModal(selectedInvoice); }}
+                className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
               >
                 <FiPrinter className="mr-2" /> Print
               </button>
               <button 
                 onClick={handleDownload}
-                className="flex items-center px-4 py-2 bg-white border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200 shadow-sm"
+                className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
               >
                 <FiDownload className="mr-2" /> Download
               </button>
@@ -363,190 +450,52 @@ export default function Billing() {
         </div>
       )}
 
-      {/* Printable Invoice (hidden by default) */}
-      <div style={{ display: 'none' }}>
-        <div 
-          ref={printRef} 
-          className="p-8 max-w-3xl mx-auto"
-        >
-          <div className="border-b border-gray-200 pb-4 mb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-800">INVOICE</h1>
-                <p className="text-gray-600 mt-2">#INV-000</p>
-              </div>
-              <div className="text-right">
-                <p className="text-gray-800 font-semibold">Your Company</p>
-                <p className="text-gray-600">123 Business Street</p>
-                <p className="text-gray-600">City, State 10001</p>
-              </div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-800 mb-2">Bill To</h2>
-              <p className="text-gray-600">Client Name</p>
+      {/* Print Preview Modal */}
+      {isPrintModalOpen && (
+        <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-blue-100 animate-fade-in">
+            <div className="flex justify-between items-center border-b border-blue-200 p-6 sticky top-0 bg-gradient-to-r from-blue-50 to-blue-100 z-10">
+              <h2 className="text-2xl font-bold text-blue-800">Print Preview</h2>
+              <button 
+                onClick={closeModal} 
+                className="text-blue-500 hover:text-blue-700 transition-colors duration-200"
+              >
+                <FiX size={24} />
+              </button>
             </div>
             
-            <div className="text-right">
-              <div className="mb-2">
-                <span className="text-gray-600">Date: </span>
-                <span className="text-gray-800">2023-01-01</span>
-              </div>
-              <div className="mb-2">
-                <span className="text-gray-600">Due Date: </span>
-                <span className="text-gray-800">2023-02-01</span>
-              </div>
-              <div>
-                <span className="text-gray-600">Status: </span>
-                <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800">
-                  Pending
-                </span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="border border-gray-200 rounded-lg overflow-hidden mb-8">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                <tr>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Sample Item</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">1</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$100.00</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">$100.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          
-          <div className="flex justify-end">
-            <div className="w-64">
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-600">Subtotal</span>
-                <span className="text-gray-800">$100.00</span>
-              </div>
-              <div className="flex justify-between py-2 border-b border-gray-200">
-                <span className="text-gray-600">Tax (0%)</span>
-                <span className="text-gray-800">$0.00</span>
-              </div>
-              <div className="flex justify-between py-2">
-                <span className="text-gray-800 font-semibold">Total</span>
-                <span className="text-gray-800 font-bold">$100.00</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="mt-12 pt-6 border-t border-gray-200">
-            <p className="text-gray-600 text-sm">Thank you for your business!</p>
-            <p className="text-gray-600 text-sm">Please make payment by the due date to avoid late fees.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Printable Invoice for Modal (hidden by default) */}
-      {isModalOpen && selectedInvoice && (
-        <div style={{ display: 'none' }}>
-          <div 
-            ref={modalPrintRef} 
-            className="p-8 max-w-3xl mx-auto"
-          >
-            <div className="border-b border-gray-200 pb-4 mb-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-800">INVOICE</h1>
-                  <p className="text-gray-600 mt-2">#{selectedInvoice.id}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-gray-800 font-semibold">Your Company</p>
-                  <p className="text-gray-600">123 Business Street</p>
-                  <p className="text-gray-600">City, State 10001</p>
-                </div>
-              </div>
+            <div className="p-6 bg-blue-50/50">
+              <InvoiceContent invoice={selectedInvoice} />
             </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-800 mb-2">Bill To</h2>
-                <p className="text-gray-600">{selectedInvoice.client}</p>
-              </div>
-              
-              <div className="text-right">
-                <div className="mb-2">
-                  <span className="text-gray-600">Date: </span>
-                  <span className="text-gray-800">{selectedInvoice.date}</span>
-                </div>
-                <div className="mb-2">
-                  <span className="text-gray-600">Due Date: </span>
-                  <span className="text-gray-800">{selectedInvoice.dueDate}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Status: </span>
-                  <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                    ${selectedInvoice.status === 'Paid' ? 'bg-green-100 text-green-800' : 
-                      selectedInvoice.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-red-100 text-red-800'}`}>
-                    {selectedInvoice.status}
-                  </span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="border border-gray-200 rounded-lg overflow-hidden mb-8">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Item</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Qty</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {selectedInvoice.items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{item.description}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{item.quantity}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${item.price.toFixed(2)}</td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${(item.quantity * item.price).toFixed(2)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            
-            <div className="flex justify-end">
-              <div className="w-64">
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Subtotal</span>
-                  <span className="text-gray-800">${selectedInvoice.amount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between py-2 border-b border-gray-200">
-                  <span className="text-gray-600">Tax (0%)</span>
-                  <span className="text-gray-800">$0.00</span>
-                </div>
-                <div className="flex justify-between py-2">
-                  <span className="text-gray-800 font-semibold">Total</span>
-                  <span className="text-gray-800 font-bold">${selectedInvoice.amount.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-            
-            <div className="mt-12 pt-6 border-t border-gray-200">
-              <p className="text-gray-600 text-sm">Thank you for your business!</p>
-              <p className="text-gray-600 text-sm">Please make payment by the due date to avoid late fees.</p>
+            <div className="bg-blue-50 px-6 py-4 border-t border-blue-200 flex justify-end space-x-3 sticky bottom-0">
+              <button 
+                onClick={handlePrint}
+                className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-md hover:shadow-lg"
+              >
+                <FiPrinter className="mr-2" /> Print Now
+              </button>
+              <button 
+                onClick={handleDownload}
+                className="flex items-center px-6 py-3 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-md hover:shadow-lg"
+              >
+                <FiDownload className="mr-2" /> Download PDF
+              </button>
+              <button 
+                onClick={closeModal}
+                className="px-6 py-3 bg-gray-100 text-blue-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 shadow-md hover:shadow-lg"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* Hidden Print Content */}
+      <div style={{ display: 'none' }}>
+        <InvoiceContent invoice={selectedInvoice} isPrint={true} refProp={printRef} />
+      </div>
     </div>
   );
 }

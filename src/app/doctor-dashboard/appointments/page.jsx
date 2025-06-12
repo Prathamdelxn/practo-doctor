@@ -11,6 +11,7 @@ import {
   Search,
   Filter,
   Plus,
+  Printer,
   CheckCircle,
   AlertCircle,
   XCircle,
@@ -22,7 +23,8 @@ import {
   MoreVertical,
   ChevronLeft,
   ChevronRight,
-  Download
+  Download,
+  X
 } from 'lucide-react';
 
 export default function AppointmentsPage() {
@@ -30,6 +32,8 @@ export default function AppointmentsPage() {
   const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'today', 'upcoming', 'completed', 'cancelled'
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
 
   // Sample appointments data
   const appointments = [
@@ -175,6 +179,11 @@ export default function AppointmentsPage() {
 
   const todayAppointments = appointments.filter(apt => apt.date === selectedDate);
   const upcomingAppointments = appointments.filter(apt => new Date(apt.date) > new Date());
+
+  const openViewModal = (appointment) => {
+    setSelectedAppointment(appointment);
+    setViewModalOpen(true);
+  };
 
   return (
     <div className="space-y-6">
@@ -408,7 +417,10 @@ export default function AppointmentsPage() {
                         </>
                       )}
                       
-                      <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg">
+                      <button 
+                        onClick={() => openViewModal(appointment)}
+                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
+                      >
                         <Eye className="w-4 h-4" />
                       </button>
                       <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
@@ -449,6 +461,144 @@ export default function AppointmentsPage() {
           </div>
         )}
       </div>
+
+      {/* View Appointment Modal */}
+{viewModalOpen && selectedAppointment && (
+  <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
+    <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
+      {/* Modal Header */}
+      <div className="flex justify-between items-center border-b border-blue-200 p-6 sticky top-0 bg-gradient-to-r from-blue-50 to-indigo-100 z-10">
+        <div className="flex items-center">
+          <Calendar className="text-blue-600 mr-3" size={24} />
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Appointment Details</h2>
+            <div className="flex items-center space-x-2 mt-1">
+              {getStatusIcon(selectedAppointment.status)}
+              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAppointment.status)}`}>
+                {selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
+              </span>
+              {selectedAppointment.isVirtual && (
+                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium flex items-center">
+                  <Video className="w-3 h-3 mr-1" />
+                  Virtual
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={() => setViewModalOpen(false)}
+          className="text-blue-500 hover:text-blue-700 transition-colors duration-200"
+          aria-label="Close modal"
+        >
+          <X size={24} />
+        </button>
+      </div>
+
+      {/* Modal Content */}
+      <div className="p-6 space-y-6">
+        {/* Patient Information Card */}
+        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <User className="mr-2 text-green-600" size={20} />
+            Patient Information
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-start space-x-4">
+              <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-xl">
+                {selectedAppointment.patient.avatar}
+              </div>
+              <div className="space-y-2">
+                <p className="text-lg font-semibold text-gray-800">{selectedAppointment.patient.name}</p>
+                <p className="text-gray-600">Age: {selectedAppointment.patient.age}</p>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center text-gray-600">
+                <Phone className="w-4 h-4 mr-2" />
+                <span>{selectedAppointment.patient.phone}</span>
+              </div>
+              <div className="flex items-center text-gray-600">
+                <Mail className="w-4 h-4 mr-2" />
+                <span>{selectedAppointment.patient.email}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Appointment Details Card */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 shadow-sm">
+          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+            <Calendar className="mr-2 text-blue-600" size={20} />
+            Appointment Details
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500 font-medium">Date & Time</p>
+              <p className="text-gray-800">
+                {new Date(selectedAppointment.date).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  weekday: 'long'
+                })}
+                <span className="ml-2 text-blue-600">{selectedAppointment.time}</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500 font-medium">Duration</p>
+              <p className="text-gray-800">{selectedAppointment.duration}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500 font-medium">Location</p>
+              <p className="text-gray-800 flex items-start">
+                <MapPin className="w-4 h-4 mr-1.5 mt-0.5 flex-shrink-0" />
+                <span>{selectedAppointment.hospital}</span>
+              </p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-sm text-gray-500 font-medium">Type</p>
+              <p className="text-gray-800">{selectedAppointment.type}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Notes Card */}
+        {selectedAppointment.notes && (
+          <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border border-gray-200 shadow-sm">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
+              <MessageSquare className="mr-2 text-gray-600" size={20} />
+              Notes
+            </h3>
+            <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-xs">
+              <p className="text-gray-800 whitespace-pre-line">{selectedAppointment.notes}</p>
+            </div>
+        </div>
+        )}
+      </div>
+
+      {/* Modal Footer */}
+      <div className="bg-gray-50 px-6 py-4 border-t border-blue-200 flex justify-end space-x-3 sticky bottom-0">
+        <button
+          className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
+        >
+          <Printer className="mr-2" size={16} /> Print
+        </button>
+        <button
+          className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
+        >
+          <Download className="mr-2" size={16} /> Download
+        </button>
+        <button
+          onClick={() => setViewModalOpen(false)}
+          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
