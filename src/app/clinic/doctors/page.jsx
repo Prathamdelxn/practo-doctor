@@ -59,7 +59,7 @@ export default function DoctorsPage() {
         specialty: doc.specialty,
         experience: `${doc.experience} Years`,
         rating: 4.5,
-        location: doc.hospitalAddress,
+        location: doc.homeAddress,
         availability: doc.available?.days || ['Mon', 'Wed', 'Fri'],
         degrees: doc.qualifications || [],
         fee: `₹${doc.consultantFee}`,

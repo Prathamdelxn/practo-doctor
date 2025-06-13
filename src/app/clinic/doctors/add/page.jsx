@@ -16,6 +16,7 @@ export default function AddDoctorPage() {
     password: '',
     phone: '',
     specialty: '',
+    homeAddress:'',
     supSpeciality: '',
     licenseNumber:'',
     experience: '',
@@ -110,33 +111,7 @@ useEffect(()=>{
     }));
   };
 
-  // const handleSubmit = (e) => {
-  //   e.preventDefault();
-  //   console.log('Form Data:', formData);
-  //   // Handle form submission here
-  // };
-// const handleSubmit = async (e) => {
-//   e.preventDefault();
-
-//  if (currentStep !== 3) {
-//     return;
-//   }
-
-
-//   try {
-//     // console.log(formData)
-//     const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', formData);
-//     console.log('Success: Register');
-//     alert("Doctor Added Successfully");
-//      Router.refresh();
-//     // redirect('/dashboard'); // Example: Next.js navigation
-//   } catch (err) {
-//     console.log(err.response?.data?.message || 'Registration failed');
-//   } finally {
-   
-//   }
-// };
-
+ 
 const uploadImageToCloudinary = async (file) => {
   try {
     const formData = new FormData();
@@ -441,6 +416,20 @@ const handleSubmit = async (e) => {
                     </button>
                   </div>
                 </div>
+                 <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <MapPin className="inline w-4 h-4 mr-2" />
+        Home Address
+      </label>
+      <textarea
+        name="homeAddress"
+        value={formData.homeAddress}
+        onChange={handleInputChange}
+        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+        placeholder="Enter your home address"
+        rows="3"
+      />
+    </div>
               </div>
             )}
 

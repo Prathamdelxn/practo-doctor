@@ -30,27 +30,27 @@ export default function ClinicLayout({ children }) {
 
   const [clinicData, setClinicData] = useState(null);
 
-  // useEffect(() => {
-  //   const token = localStorage.getItem('token');
-  //   const userStr = localStorage.getItem('user');
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    const userStr = localStorage.getItem('user');
     
-  //   if (!token || !userStr) {
-  //     router.push('/login');
-  //     return;
-  //   }
+    if (!token || !userStr) {
+      router.push('/login');
+      return;
+    }
     
-  //   try {
-  //     const user = JSON.parse(userStr);
-  //     setClinicData(user);
-  //     if (user.role !== "clinic") {
-  //       router.push('/login');
-  //     }
-  //   } catch (error) {
-  //     console.error('Invalid user data in localStorage');
-  //     router.push('/login');
-  //   }
-  // }, [router]);
-
+    try {
+      const user = JSON.parse(userStr);
+      setClinicData(user);
+      if (user.role !== "clinic") {
+        router.push('/login');
+      }
+    } catch (error) {
+      console.error('Invalid user data in localStorage');
+      router.push('/login');
+    }
+  }, [router]);
+console.log("asdf",clinicData)
   const sidebarItems = [
     { icon: LayoutDashboard, label: 'Dashboard', href: '/clinic', id: 'dashboard' },
     { icon: Users, label: 'Doctors', href: '/clinic/doctors', id: 'doctors' },
@@ -111,8 +111,8 @@ export default function ClinicLayout({ children }) {
     <div className="bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl p-4 text-white">
       <div className="flex items-center space-x-3">
         <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-          {clinicData?.profileImage ? (
-            <img src={clinicData.profileImage} alt="Clinic" className="rounded-full w-full h-full object-cover" />
+          {clinicData?.logo ? (
+            <img src={clinicData.logo} alt="Clinic" className="rounded-full w-full h-full object-cover" />
           ) : (
             <Building2 className="w-5 h-5" />
           )}
