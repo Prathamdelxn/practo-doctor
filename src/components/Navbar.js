@@ -95,9 +95,17 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { Menu, X, Search, User, Bell } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 
 export default function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const pathname = usePathname();
+
+  // Function to determine if a link is active
+  const isActive = (path) => {
+    if (path === '/') return pathname === path;
+    return pathname.startsWith(path);
+  };
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -111,16 +119,28 @@ export default function Navbar() {
               <span className="ml-2 text-xl font-bold text-blue-600">HealthByte</span>
             </Link>
             <div className="hidden md:ml-6 md:flex md:space-x-8">
-              <Link href="/" className="text-blue-600 border-b-2 border-blue-600 px-1 pt-1 inline-flex items-center text-sm font-medium">
+              <Link 
+                href="/" 
+                className={`${isActive('/') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} px-1 pt-1 inline-flex items-center text-sm font-medium`}
+              >
                 Home
               </Link>
-              <Link href="/doctors" className="text-gray-500 hover:text-gray-700 px-1 pt-1 inline-flex items-center text-sm font-medium">
+              <Link 
+                href="/doctors" 
+                className={`${isActive('/doctors') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} px-1 pt-1 inline-flex items-center text-sm font-medium`}
+              >
                 Find Doctors
               </Link>
-              <Link href="/clinics" className="text-gray-500 hover:text-gray-700 px-1 pt-1 inline-flex items-center text-sm font-medium">
+              <Link 
+                href="/clinics" 
+                className={`${isActive('/clinics') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} px-1 pt-1 inline-flex items-center text-sm font-medium`}
+              >
                 Clinics
               </Link>
-              <Link href="/services" className="text-gray-500 hover:text-gray-700 px-1 pt-1 inline-flex items-center text-sm font-medium">
+              <Link 
+                href="/services" 
+                className={`${isActive('/services') ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'} px-1 pt-1 inline-flex items-center text-sm font-medium`}
+              >
                 Services
               </Link>
             </div>
@@ -169,16 +189,28 @@ export default function Navbar() {
       {isMenuOpen && (
         <div className="md:hidden bg-white border-t border-gray-100">
           <div className="px-2 pt-2 pb-3 space-y-1">
-            <Link href="/" className="bg-blue-50 text-blue-600 block px-3 py-2 rounded-md text-base font-medium">
+            <Link 
+              href="/" 
+              className={`${isActive('/') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'} block px-3 py-2 rounded-md text-base font-medium`}
+            >
               Home
             </Link>
-            <Link href="/doctors" className="text-gray-500 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+            <Link 
+              href="/doctors" 
+              className={`${isActive('/doctors') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'} block px-3 py-2 rounded-md text-base font-medium`}
+            >
               Find Doctors
             </Link>
-            <Link href="/clinics" className="text-gray-500 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+            <Link 
+              href="/clinics" 
+              className={`${isActive('/clinics') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'} block px-3 py-2 rounded-md text-base font-medium`}
+            >
               Clinics
             </Link>
-            <Link href="/services" className="text-gray-500 hover:bg-gray-50 block px-3 py-2 rounded-md text-base font-medium">
+            <Link 
+              href="/services" 
+              className={`${isActive('/services') ? 'bg-blue-50 text-blue-600' : 'text-gray-500 hover:bg-gray-50'} block px-3 py-2 rounded-md text-base font-medium`}
+            >
               Services
             </Link>
           </div>

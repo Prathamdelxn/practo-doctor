@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Search, Filter, MapPin, ChevronDown, Star } from 'lucide-react';
 import Link from 'next/link';
+import Navbar from '@/components/Navbar';
 import DoctorsList from '@/components/DoctorsList';
 
 export default function FindDoctorsPage() {
@@ -33,18 +34,32 @@ export default function FindDoctorsPage() {
     'Seattle'
   ];
 
+  const handleSearch = () => {
+    // Add your search logic here
+    console.log('Search triggered with:', {
+      searchQuery,
+      specialtyFilter,
+      locationFilter,
+      availabilityFilter,
+      ratingFilter
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
+      <Navbar />
+      
+      {/* Centered Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-4xl font-bold mb-6">Find the Best Doctors Near You</h1>
-          <p className="text-xl mb-8 max-w-3xl">
+          <p className="text-xl mb-8">
             Book appointments with top-rated, qualified doctors for all your healthcare needs
           </p>
 
-          <div className="bg-white rounded-lg shadow-lg p-4 max-w-4xl">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-grow">
+          <div className="bg-white rounded-lg shadow-lg p-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="relative flex-grow w-full">
                 <Search className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
@@ -52,9 +67,10 @@ export default function FindDoctorsPage() {
                   className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
                 />
               </div>
-              <div className="relative flex-grow">
+              <div className="relative flex-grow w-full">
                 <MapPin className="absolute left-3 top-3.5 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
@@ -65,74 +81,21 @@ export default function FindDoctorsPage() {
                 />
               </div>
               <button 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center"
-                onClick={() => setShowFilters(!showFilters)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center justify-center w-full md:w-auto"
+                onClick={handleSearch}
               >
-                <Filter className="h-5 w-5 mr-2" />
-                Filters
+                <Search className="h-5 w-5 mr-2" />
+                Search
               </button>
             </div>
-
-            {showFilters && (
-              <div className="mt-4 pt-4 border-t border-gray-200">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Specialty</label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md p-2 text-gray-700"
-                      multiple
-                      value={specialtyFilter}
-                      onChange={(e) =>
-                        setSpecialtyFilter(Array.from(e.target.selectedOptions, (opt) => opt.value))
-                      }
-                    >
-                      {specialties.map((spec) => (
-                        <option key={spec} value={spec}>{spec}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Availability</label>
-                    <select
-                      className="w-full border border-gray-300 rounded-md p-2 text-gray-700"
-                      value={availabilityFilter}
-                      onChange={(e) => setAvailabilityFilter(e.target.value)}
-                    >
-                      <option value="">Any Time</option>
-                      <option value="today">Available Today</option>
-                      <option value="week">This Week</option>
-                      <option value="weekend">Weekend</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Minimum Rating</label>
-                    <div className="flex items-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          className={`mr-1 ${ratingFilter >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                          onClick={() => setRatingFilter(star)}
-                        >
-                          <Star className="h-5 w-5 fill-current" />
-                        </button>
-                      ))}
-                      <button 
-                        className="ml-2 text-sm text-blue-600"
-                        onClick={() => setRatingFilter(0)}
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </div>
 
+      {/* Rest of your existing code remains the same */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row gap-8">
+          {/* Sidebar Filters */}
           <div className="w-full md:w-64 flex-shrink-0">
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-4">
               <h3 className="font-medium text-lg mb-4">Filter Doctors</h3>
@@ -228,6 +191,7 @@ export default function FindDoctorsPage() {
             </div>
           </div>
 
+          {/* Main Content */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800">

@@ -8,7 +8,7 @@ import DoctorsSection from '@/components/DoctorsSection';
 // import HospitalsSection from '@/components/HospitalsSection';
 // import AppDownload from '@/components/AppDownload';
 import Footer from '@/components/Footer';
-import ClinicsPage from '@/components/NearbyClinics';
+import NearbyClinicsPage from '@/components/NearbyClinics';
 import Articles from '@/components/Articles';
 import PatientHistoryPage from './patient-history/page';
 import PatientHistoryCTA from '@/components/PatienHistory';
@@ -27,7 +27,7 @@ export default function Home() {
         <HeroSection />
         <Services />
         <DoctorsSection />
-        <ClinicsPage/>
+        <NearbyClinicsPage/>
 
         <Articles/>
        
