@@ -1,9 +1,9 @@
-
-           'use client'
+'use client'
 
 import { useState, useEffect } from 'react';
-import { FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiSearch, FiUserPlus, FiEdit2, FiTrash2, FiChevronLeft, FiChevronRight, FiX, FiEye, FiEyeOff, FiAlertCircle } from 'react-icons/fi';
 import { MdOutlineVerified, MdOutlinePending } from 'react-icons/md';
+import { FiRotateCw , CheckCircle, XCircle } from 'react-icons/fi';
 
 const ReceptionistManagement = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -13,52 +13,85 @@ const ReceptionistManagement = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [receptionists, setReceptionists] = useState([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [submitLoading, setSubmitLoading] = useState(false);
-const[doctorId,setID]=useState();
-  // Fetch receptionists on component mount
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [Id, setId] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   useEffect(() => {
-    fetchReceptionists();
+    const user = localStorage.getItem('user');
+    if (!user) {
+      setError('User not authenticated. Please login again.');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const userdata = JSON.parse(user);
+      const id = userdata?.id;
+      if (!id) {
+        throw new Error('Invalid user data');
+      }
+      setId(id);
+      fetchReceptionists(id);
+    } catch (err) {
+      console.error('Error parsing user data:', err);
+      setError('Failed to load user data. Please refresh the page.');
+      setLoading(false);
+    }
   }, []);
-useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-  const docData=JSON.parse(savedUser);
-    console.log("docotr user",docData);
-    setID(docData.id);
-   
-    
-  }, []);
-  const fetchReceptionists = async () => {
+
+  const fetchReceptionists = async (id) => {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('https://practo-backend.vercel.app/api/reciptionist/fetchAll'); // Adjust the endpoint as needed
+      const response = await fetch(`https://practo-backend.vercel.app/api/clinic/fetch-receptionist/${id}`);
+      
       if (!response.ok) {
-        throw new Error('Failed to fetch receptionists');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to fetch receptionists');
       }
+
       const data = await response.json();
-      setReceptionists(data.data);
+      if (!data.staff || !Array.isArray(data.staff)) {
+        throw new Error('Invalid data format received from server');
+      }
+
+      setReceptionists(data.staff);
     } catch (err) {
-      setError('Failed to load receptionists');
       console.error('Error fetching receptionists:', err);
+      setError(err.message || 'Failed to load receptionists. Please try again later.');
+      setReceptionists([]);
     } finally {
       setLoading(false);
     }
   };
 
   const filteredReceptionists = receptionists.filter(receptionist => {
-    const matchesSearch = `${receptionist.firstName} ${receptionist.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         receptionist.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = `${receptionist.firstName || ''} ${receptionist.lastName || ''}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (receptionist.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = activeFilter === 'all' || receptionist.status === activeFilter;
     return matchesSearch && matchesFilter;
   });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredReceptionists.length / itemsPerPage);
+  const paginatedReceptionists = filteredReceptionists.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   const openAddModal = () => {
     setCurrentReceptionist(null);
     setIsModalOpen(true);
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setError('');
+    setSuccessMessage('');
   };
 
   const openEditModal = (receptionist) => {
@@ -66,28 +99,34 @@ useEffect(() => {
     setIsModalOpen(true);
     setShowPassword(false);
     setShowConfirmPassword(false);
+    setError('');
+    setSuccessMessage('');
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Are you sure you want to delete this receptionist?')) {
+    if (!window.confirm('Are you sure you want to delete this receptionist?')) {
       return;
     }
 
+    setDeleteLoading(true);
     try {
-      const response = await fetch(`/api/staff/${id}`, {
+      const response = await fetch(`https://practo-backend.vercel.app/api/reciptionist/delete/${id}`, {
         method: 'DELETE',
       });
 
       if (!response.ok) {
-        throw new Error('Failed to delete receptionist');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete receptionist');
       }
 
-      // Remove from local state
       setReceptionists(prev => prev.filter(r => r._id !== id));
-      alert('Receptionist deleted successfully');
+      setSuccessMessage('Receptionist deleted successfully');
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (err) {
       console.error('Error deleting receptionist:', err);
-      alert('Failed to delete receptionist');
+      setError(err.message || 'Failed to delete receptionist');
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
@@ -95,26 +134,44 @@ useEffect(() => {
     e.preventDefault();
     setSubmitLoading(true);
     setError('');
+    setSuccessMessage('');
 
     const formData = new FormData(e.target);
     const data = {
-      firstName: formData.get('firstName'),
-      lastName: formData.get('lastName'),
-      email: formData.get('email'),
-      phone: formData.get('phone'),
+      firstName: formData.get('firstName')?.trim(),
+      lastName: formData.get('lastName')?.trim(),
+      email: formData.get('email')?.trim(),
+      phone: formData.get('phone')?.trim(),
       status: formData.get('status'),
-      doctorId:doctorId,
-      // Add doctorId if needed - you might want to get this from context or props
-      // doctorId: formData.get('doctorId'), 
+      clinicId: Id,
     };
+
+    // Validation
+    if (!data.firstName || !data.lastName || !data.email || !data.phone) {
+      setError('All required fields must be filled');
+      setSubmitLoading(false);
+      return;
+    }
+
+    if (!/^\S+@\S+\.\S+$/.test(data.email)) {
+      setError('Please enter a valid email address');
+      setSubmitLoading(false);
+      return;
+    }
 
     // Handle password for new receptionists
     if (!currentReceptionist) {
       const password = formData.get('password');
       const confirmPassword = formData.get('confirmPassword');
       
+      if (!password || password.length < 8) {
+        setError('Password must be at least 8 characters long');
+        setSubmitLoading(false);
+        return;
+      }
+
       if (password !== confirmPassword) {
-        alert('Passwords do not match!');
+        setError('Passwords do not match');
         setSubmitLoading(false);
         return;
       }
@@ -123,6 +180,11 @@ useEffect(() => {
       // Handle password change for existing receptionists
       const newPassword = formData.get('newPassword');
       if (newPassword && newPassword.length > 0) {
+        if (newPassword.length < 8) {
+          setError('New password must be at least 8 characters long');
+          setSubmitLoading(false);
+          return;
+        }
         data.password = newPassword;
       }
     }
@@ -139,9 +201,8 @@ useEffect(() => {
           body: JSON.stringify(data),
         });
       } else {
-        
         // Create new receptionist
-        response = await fetch('https://practo-backend.vercel.app/api/reciptionist/create', {
+        response = await fetch('https://practo-backend.vercel.app/api/clinic/add-receptinist', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -158,44 +219,66 @@ useEffect(() => {
       const savedReceptionist = await response.json();
 
       if (currentReceptionist) {
-        // Update in local state
         setReceptionists(prev => 
           prev.map(r => r._id === currentReceptionist._id ? savedReceptionist : r)
         );
-        alert('Receptionist updated successfully');
+        setSuccessMessage('Receptionist updated successfully');
       } else {
-        // Add to local state
         setReceptionists(prev => [...prev, savedReceptionist]);
-        alert('Receptionist created successfully');
+        setSuccessMessage('Receptionist created successfully');
       }
 
-      setIsModalOpen(false);
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setSuccessMessage('');
+      }, 1500);
     } catch (err) {
       console.error('Error saving receptionist:', err);
-      setError(err.message);
+      setError(err.message || 'An error occurred while saving. Please try again.');
     } finally {
       setSubmitLoading(false);
     }
   };
 
+  // Clear messages after timeout
+  useEffect(() => {
+    if (error || successMessage) {
+      const timer = setTimeout(() => {
+        setError('');
+        setSuccessMessage('');
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [error, successMessage]);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
+    <div className="min-h-screen bg-gray-50 p-4 md:p-6">
       {/* Header Section */}
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-800">Receptionist Management</h1>
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800">Receptionist Management</h1>
+          <p className="text-gray-600 mt-1">Manage your clinic's receptionists</p>
+        </div>
         <button
           onClick={openAddModal}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg transition-colors w-full md:w-auto justify-center"
         >
           <FiUserPlus size={18} />
           Add New Receptionist
         </button>
       </div>
 
-      {/* Error Message */}
+      {/* Status Messages */}
       {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          {error}
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-2">
+          <FiAlertCircle className="flex-shrink-0 mt-0.5" />
+          <span>{error}</span>
+        </div>
+      )}
+      {successMessage && (
+        <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-start gap-2">
+          <CheckCircle className="flex-shrink-0 mt-0.5" />
+          <span>{successMessage}</span>
         </div>
       )}
 
@@ -205,16 +288,22 @@ useEffect(() => {
           <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search receptionists..."
+            placeholder="Search by name or email..."
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setCurrentPage(1); // Reset to first page when searching
+            }}
           />
         </div>
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
           value={activeFilter}
-          onChange={(e) => setActiveFilter(e.target.value)}
+          onChange={(e) => {
+            setActiveFilter(e.target.value);
+            setCurrentPage(1); // Reset to first page when filtering
+          }}
         >
           <option value="all">All Receptionists</option>
           <option value="active">Active</option>
@@ -226,7 +315,40 @@ useEffect(() => {
       <div className="bg-white rounded-xl shadow-sm overflow-hidden">
         {loading ? (
           <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+            <FiRotateCw  className="animate-spin h-8 w-8 text-indigo-600" />
+            <span className="ml-2">Loading receptionists...</span>
+          </div>
+        ) : error && receptionists.length === 0 ? (
+          <div className="p-8 text-center">
+            <FiAlertCircle className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium text-gray-900">Unable to load receptionists</h3>
+            <p className="mt-1 text-gray-500">{error}</p>
+            <button
+              onClick={() => fetchReceptionists(Id)}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+            >
+              <FiRotateCw className="mr-2 h-4 w-4" />
+              Retry
+            </button>
+          </div>
+        ) : receptionists.length === 0 ? (
+          <div className="p-8 text-center">
+            <FiUserPlus className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium text-gray-900">No receptionists found</h3>
+            <p className="mt-1 text-gray-500">Get started by adding a new receptionist.</p>
+            <button
+              onClick={openAddModal}
+              className="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none"
+            >
+              <FiUserPlus className="mr-2 h-4 w-4" />
+              Add Receptionist
+            </button>
+          </div>
+        ) : filteredReceptionists.length === 0 ? (
+          <div className="p-8 text-center">
+            <FiSearch className="mx-auto h-12 w-12 text-gray-400" />
+            <h3 className="mt-2 text-lg font-medium text-gray-900">No matching receptionists</h3>
+            <p className="mt-1 text-gray-500">Try adjusting your search or filter criteria.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -241,62 +363,59 @@ useEffect(() => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filteredReceptionists.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" className="px-6 py-12 text-center text-gray-500">
-                      No receptionists found
-                    </td>
-                  </tr>
-                ) : (
-                  filteredReceptionists.map((receptionist) => (
-                    <tr key={receptionist._id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
-                            {receptionist.firstName?.charAt(0)}{receptionist.lastName?.charAt(0)}
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">
-                              {receptionist.firstName} {receptionist.lastName}
-                            </div>
-                            
+                {paginatedReceptionists.map((receptionist) => (
+                  <tr key={receptionist._id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-medium">
+                          {receptionist.firstName?.charAt(0)}{receptionist.lastName?.charAt(0)}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-900">
+                            {receptionist.firstName} {receptionist.lastName}
                           </div>
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {receptionist.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {receptionist.phone}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        {receptionist.status === 'active' ? (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 items-center gap-1">
-                            <MdOutlineVerified size={14} /> Active
-                          </span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {receptionist.email || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      {receptionist.phone || '-'}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {receptionist.status === 'active' ? (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800 items-center gap-1">
+                          <MdOutlineVerified size={14} /> Active
+                        </span>
+                      ) : (
+                        <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 items-center gap-1">
+                          <MdOutlinePending size={14} /> Inactive
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                      <button
+                        onClick={() => openEditModal(receptionist)}
+                        className="text-indigo-600 hover:text-indigo-900 mr-4"
+                        disabled={deleteLoading}
+                      >
+                        <FiEdit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(receptionist._id)}
+                        className="text-red-600 hover:text-red-900"
+                        disabled={deleteLoading}
+                      >
+                        {deleteLoading ? (
+                          <FiRotateCw className="animate-spin h-4 w-4" />
                         ) : (
-                          <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-yellow-100 text-yellow-800 items-center gap-1">
-                            <MdOutlinePending size={14} /> Inactive
-                          </span>
-                        )}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                        <button
-                          onClick={() => openEditModal(receptionist)}
-                          className="text-indigo-600 hover:text-indigo-900 mr-4"
-                        >
-                          <FiEdit2 size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(receptionist._id)}
-                          className="text-red-600 hover:text-red-900"
-                        >
                           <FiTrash2 size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
+                        )}
+                      </button>
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>
@@ -304,25 +423,43 @@ useEffect(() => {
       </div>
 
       {/* Pagination */}
-      <div className="flex justify-between items-center mt-6">
-        <div className="text-sm text-gray-500">
-          Showing {filteredReceptionists.length} of {receptionists.length} entries
+      {filteredReceptionists.length > 0 && (
+        <div className="flex flex-col md:flex-row justify-between items-center mt-6 gap-4">
+          <div className="text-sm text-gray-500">
+            Showing {Math.min((currentPage - 1) * itemsPerPage + 1, filteredReceptionists.length)}-
+            {Math.min(currentPage * itemsPerPage, filteredReceptionists.length)} of {filteredReceptionists.length} receptionists
+          </div>
+          <div className="flex gap-1">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronLeft size={18} />
+            </button>
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-4 py-2 rounded-lg border ${
+                  currentPage === i + 1
+                    ? 'bg-indigo-600 text-white border-indigo-600'
+                    : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                }`}
+              >
+                {i + 1}
+              </button>
+            ))}
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <FiChevronRight size={18} />
+            </button>
+          </div>
         </div>
-        <div className="flex gap-1">
-          <button className="p-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100 disabled:opacity-50">
-            <FiChevronLeft size={18} />
-          </button>
-          <button className="px-4 py-2 rounded-lg bg-indigo-600 text-white font-medium">
-            1
-          </button>
-          <button className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">
-            2
-          </button>
-          <button className="p-2 rounded-lg border border-gray-300 text-gray-500 hover:bg-gray-100">
-            <FiChevronRight size={18} />
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Add/Edit Modal */}
       {isModalOpen && (
@@ -332,183 +469,202 @@ useEffect(() => {
               <h3 className="text-xl font-semibold text-gray-800">
                 {currentReceptionist ? 'Edit Receptionist' : 'Add New Receptionist'}
               </h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-500">
+              <button 
+                onClick={() => !submitLoading && setIsModalOpen(false)}
+                className={`text-gray-400 hover:text-gray-500 ${submitLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={submitLoading}
+              >
                 <FiX size={24} />
               </button>
             </div>
             <div className="p-6">
               {error && (
-                <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
-                  {error}
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg flex items-start gap-2">
+                  <FiAlertCircle className="flex-shrink-0 mt-0.5" />
+                  <span>{error}</span>
+                </div>
+              )}
+              {successMessage && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg flex items-start gap-2">
+                  <CheckCircle className="flex-shrink-0 mt-0.5" />
+                  <span>{successMessage}</span>
                 </div>
               )}
               <form onSubmit={handleSubmit}>
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      First Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="firstName"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                      defaultValue={currentReceptionist?.firstName || ''}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Last Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      name="lastName"
-                      required
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                      defaultValue={currentReceptionist?.lastName || ''}
-                    />
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                    defaultValue={currentReceptionist?.email || ''}
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Phone <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    required
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                    defaultValue={currentReceptionist?.phone || ''}
-                  />
-                </div>
-
-                {/* Password fields - shown for new receptionists or when editing (optional for edit) */}
-                {!currentReceptionist && (
-                  <>
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Password <span className="text-red-500">*</span>
+                        First Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="firstName"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                        defaultValue={currentReceptionist?.firstName || ''}
+                        disabled={submitLoading}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Last Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="lastName"
+                        required
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                        defaultValue={currentReceptionist?.lastName || ''}
+                        disabled={submitLoading}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Email <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                      defaultValue={currentReceptionist?.email || ''}
+                      disabled={submitLoading || !!currentReceptionist}
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Phone <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                      defaultValue={currentReceptionist?.phone || ''}
+                      disabled={submitLoading}
+                    />
+                  </div>
+
+                  {/* Password fields */}
+                  {!currentReceptionist ? (
+                    <>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Password <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            name="password"
+                            required
+                            minLength={8}
+                            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                            placeholder="At least 8 characters"
+                            disabled={submitLoading}
+                          />
+                          <button
+                            type="button"
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                            onClick={() => setShowPassword(!showPassword)}
+                            disabled={submitLoading}
+                          >
+                            {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                          Confirm Password <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showConfirmPassword ? "text" : "password"}
+                            name="confirmPassword"
+                            required
+                            minLength={8}
+                            className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                            placeholder="Confirm your password"
+                            disabled={submitLoading}
+                          />
+                          <button
+                            type="button"
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                            disabled={submitLoading}
+                          >
+                            {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        New Password (optional)
                       </label>
                       <div className="relative">
                         <input
                           type={showPassword ? "text" : "password"}
-                          name="password"
-                          required
+                          name="newPassword"
                           minLength={8}
                           className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                          placeholder="Enter password (min 8 characters)"
+                          placeholder="Leave blank to keep current"
+                          disabled={submitLoading}
                         />
                         <button
                           type="button"
                           className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
                           onClick={() => setShowPassword(!showPassword)}
+                          disabled={submitLoading}
                         >
                           {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
                         </button>
                       </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Minimum 8 characters required if changing password
+                      </p>
                     </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Confirm Password <span className="text-red-500">*</span>
-                      </label>
-                      <div className="relative">
-                        <input
-                          type={showConfirmPassword ? "text" : "password"}
-                          name="confirmPassword"
-                          required
-                          minLength={8}
-                          className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                          placeholder="Confirm password"
-                        />
-                        <button
-                          type="button"
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                        >
-                          {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                        </button>
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Optional password change for existing receptionists */}
-                {currentReceptionist && (
+                  )}
+                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      New Password (optional)
-                    </label>
-                    <div className="relative">
-                      <input
-                        type={showPassword ? "text" : "password"}
-                        name="newPassword"
-                        minLength={8}
-                        className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                        placeholder="Leave blank to keep current password"
-                      />
-                      <button
-                        type="button"
-                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
-                      </button>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Minimum 8 characters required if changing password
-                    </p>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                    <select
+                      name="status"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                      defaultValue={currentReceptionist?.status || 'active'}
+                      disabled={submitLoading}
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
                   </div>
-                )}
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
-                  <select
-                    name="status"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
-                    defaultValue={currentReceptionist?.status || 'active'}
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
 
-                <div className="flex justify-end gap-3 pt-4 border-t">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                    disabled={submitLoading}
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white transition-colors disabled:opacity-50 flex items-center gap-2"
-                    disabled={submitLoading}
-                  >
-                    {submitLoading && (
-                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    )}
-                    {currentReceptionist ? 'Update' : 'Create'} Receptionist
-                  </button>
+                  <div className="flex justify-end gap-3 pt-4 border-t">
+                    <button
+                      type="button"
+                      onClick={() => setIsModalOpen(false)}
+                      className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={submitLoading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      disabled={submitLoading}
+                    >
+                      {submitLoading && (
+                        <FiRotateCw className="animate-spin h-4 w-4" />
+                      )}
+                      {currentReceptionist ? 'Update' : 'Create'} Receptionist
+                    </button>
+                  </div>
                 </div>
-              </div>
               </form>
             </div>
           </div>

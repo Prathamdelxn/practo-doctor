@@ -43,7 +43,7 @@ export default function DoctorsPage() {
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     const data = JSON.parse(savedUser);
-    fetchDoctors(data.id);
+    fetchDoctors(data?.id);
   }, []);
 
   const fetchDoctors = async (id) => {
