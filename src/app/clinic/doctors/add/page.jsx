@@ -166,7 +166,7 @@ const handleSubmit = async (e) => {
   }
 
   try {
-    const response = await axios.post('https://practo-backend.vercel.app/api/clinic/doctor-add', formData);
+    const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', formData);
     console.log('Success: Register');
     alert("Doctor Added Successfully");
     
