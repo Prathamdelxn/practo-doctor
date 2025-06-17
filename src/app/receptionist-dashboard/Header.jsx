@@ -2,11 +2,24 @@
 'use client'
 
 import { useState } from 'react'
-import { BellIcon, Bars3Icon, MagnifyingGlassIcon } from '@heroicons/react/24/outline'
+import { BellIcon, Bars3Icon, MagnifyingGlassIcon, ArrowRightOnRectangleIcon } from '@heroicons/react/24/outline'
+import { useRouter } from 'next/navigation'
 
 export default function Header({ onMenuClick }) {
+  const router = useRouter()
   const [notifications] = useState(3)
   const [showNotifications, setShowNotifications] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
+
+  const handleLogout = () => {
+    // Perform logout actions here (clear tokens, etc.)
+    // For example:
+    localStorage.removeItem('token')
+       localStorage.removeItem('user')
+    
+    // Redirect to login page
+    router.push('/login')
+  }
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -76,11 +89,31 @@ export default function Header({ onMenuClick }) {
           </div>
 
           {/* User menu */}
-          <div className="flex items-center space-x-2">
-            <span className="text-sm text-gray-700">Good morning</span>
-            <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-              <span className="text-white text-sm font-medium">R</span>
-            </div>
+          <div className="relative">
+            <button
+              onClick={() => setShowUserMenu(!showUserMenu)}
+              className="flex items-center space-x-2 focus:outline-none"
+            >
+              <span className="text-sm text-gray-700">Good morning</span>
+              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-medium">R</span>
+              </div>
+            </button>
+
+            {/* User dropdown menu */}
+            {showUserMenu && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                <div className="py-1">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  >
+                    <ArrowRightOnRectangleIcon className="h-4 w-4 mr-2" />
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
