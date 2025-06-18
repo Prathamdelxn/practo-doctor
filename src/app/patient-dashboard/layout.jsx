@@ -6,7 +6,10 @@ import { FiHome, FiCalendar, FiFileText, FiPieChart, FiSettings, FiUser, FiMenu,
 import { FaHeartbeat, FaClinicMedical } from 'react-icons/fa'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { 
 
+  LogOut
+} from 'lucide-react'
 export default function DashboardLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
     const router = useRouter();
@@ -96,8 +99,17 @@ useEffect(() => {
           {/* Sidebar footer */}
           <div className="p-4 border-t">
             <div className="text-sm text-gray-500">
-              <p>Need help?</p>
-              <a href="#" className="text-blue-600 hover:underline">Contact support</a>
+              <button
+  onClick={() => {
+    localStorage.removeItem('token'); 
+    localStorage.removeItem('user');// 🔐 Clear the token
+    router.push('/login');      // 🚀 Redirect to login
+  }}
+  className="mt-2 w-full flex items-center justify-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-lg transition-colors"
+>
+  <LogOut className="mr-2 h-4 w-4" />
+  Sign out
+</button>
             </div>
           </div>
         </div>
