@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, ChevronDown, Star } from 'lucide-react';
 import Link from 'next/link';
 import Navbar from '@/components/Navbar';
@@ -13,45 +13,57 @@ export default function FindDoctorsPage() {
   const [availabilityFilter, setAvailabilityFilter] = useState('');
   const [ratingFilter, setRatingFilter] = useState(0);
   const [showFilters, setShowFilters] = useState(false);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const specialties = [
-    'Cardiologist',
-    'Dermatologist',
-    'Neurologist',
-    'Orthopedic',
-    'Pediatrician',
-    'Gynecologist',
-    'ENT Specialist',
-    'General Physician'
+    'Cardiologist', 'Dermatologist', 'Neurologist', 'Orthopedic',
+    'Pediatrician', 'Gynecologist', 'ENT Specialist', 'General Physician'
   ];
 
-  const locations = [
-    'New York',
-    'Boston',
-    'Chicago',
-    'Los Angeles',
-    'San Francisco',
-    'Seattle'
-  ];
+  const locations = ['New York', 'Boston', 'Chicago', 'Los Angeles', 'San Francisco', 'Seattle'];
 
+  // Fetch doctors from API
+  const fetchDoctors = async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+
+      if (searchQuery) params.append('searchQuery', searchQuery);
+      specialtyFilter.forEach(spec => params.append('specialty', spec));
+      locationFilter.forEach(loc => params.append('location', loc));
+      if (availabilityFilter) params.append('availability', availabilityFilter);
+      if (ratingFilter) params.append('rating', ratingFilter);
+
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/doctors?${query.toString()}`);
+    
+      const data = await res.json();
+
+      setDoctors(data.doctors || []);
+    } catch (err) {
+      console.error('Failed to fetch doctors:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Trigger fetch on filter change
+  useEffect(() => {
+    fetchDoctors();
+  }, [specialtyFilter, locationFilter, availabilityFilter, ratingFilter]);
+
+  // Manual trigger for search
   const handleSearch = () => {
-    // Add your search logic here
-    console.log('Search triggered with:', {
-      searchQuery,
-      specialtyFilter,
-      locationFilter,
-      availabilityFilter,
-      ratingFilter
-    });
+    fetchDoctors();
   };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
       
-      {/* Centered Hero Section */}
+      {/* Hero Section */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-800 py-16 text-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-4xl mx-auto px-4 text-center">
           <h1 className="text-4xl font-bold mb-6">Find the Best Doctors Near You</h1>
           <p className="text-xl mb-8">
             Book appointments with top-rated, qualified doctors for all your healthcare needs
@@ -64,7 +76,7 @@ export default function FindDoctorsPage() {
                 <input
                   type="text"
                   placeholder="Search for doctors, specialties..."
-                  className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                  className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
@@ -75,7 +87,7 @@ export default function FindDoctorsPage() {
                 <input
                   type="text"
                   placeholder="Location"
-                  className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-800"
+                  className="pl-10 pr-4 py-3 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-gray-800"
                   value={locationFilter.join(', ')}
                   readOnly
                 />
@@ -92,7 +104,7 @@ export default function FindDoctorsPage() {
         </div>
       </div>
 
-      {/* Rest of your existing code remains the same */}
+      {/* Filters and Doctors List */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="flex flex-col md:flex-row gap-8">
           {/* Sidebar Filters */}
@@ -100,6 +112,7 @@ export default function FindDoctorsPage() {
             <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200 sticky top-4">
               <h3 className="font-medium text-lg mb-4">Filter Doctors</h3>
 
+              {/* Specialty Filter */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Specialty</h4>
                 <div className="space-y-2">
@@ -111,12 +124,10 @@ export default function FindDoctorsPage() {
                         checked={specialtyFilter.includes(spec)}
                         onChange={() => 
                           setSpecialtyFilter(prev => 
-                            prev.includes(spec) 
-                              ? prev.filter(s => s !== spec) 
-                              : [...prev, spec]
+                            prev.includes(spec) ? prev.filter(s => s !== spec) : [...prev, spec]
                           )
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                       />
                       <label htmlFor={`spec-${spec}`} className="ml-2 text-sm text-gray-700">
                         {spec}
@@ -126,6 +137,7 @@ export default function FindDoctorsPage() {
                 </div>
               </div>
 
+              {/* Location Filter */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Location</h4>
                 <div className="space-y-2">
@@ -135,14 +147,12 @@ export default function FindDoctorsPage() {
                         type="checkbox"
                         id={`loc-${loc}`}
                         checked={locationFilter.includes(loc)}
-                        onChange={() => 
-                          setLocationFilter(prev => 
-                            prev.includes(loc) 
-                              ? prev.filter(l => l !== loc) 
-                              : [...prev, loc]
+                        onChange={() =>
+                          setLocationFilter(prev =>
+                            prev.includes(loc) ? prev.filter(l => l !== loc) : [...prev, loc]
                           )
                         }
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                       />
                       <label htmlFor={`loc-${loc}`} className="ml-2 text-sm text-gray-700">
                         {loc}
@@ -152,6 +162,7 @@ export default function FindDoctorsPage() {
                 </div>
               </div>
 
+              {/* Availability Filter */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Availability</h4>
                 <select
@@ -166,6 +177,7 @@ export default function FindDoctorsPage() {
                 </select>
               </div>
 
+              {/* Rating Filter */}
               <div>
                 <h4 className="text-sm font-medium text-gray-700 mb-2">Rating</h4>
                 <div className="space-y-2">
@@ -176,7 +188,7 @@ export default function FindDoctorsPage() {
                         id={`rating-${rating}`}
                         checked={ratingFilter === rating}
                         onChange={() => setRatingFilter(ratingFilter === rating ? 0 : rating)}
-                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                        className="h-4 w-4 text-blue-600 border-gray-300 rounded"
                       />
                       <label htmlFor={`rating-${rating}`} className="ml-2 text-sm text-gray-700 flex items-center">
                         {Array(rating).fill().map((_, i) => (
@@ -191,7 +203,7 @@ export default function FindDoctorsPage() {
             </div>
           </div>
 
-          {/* Main Content */}
+          {/* Doctor Results */}
           <div className="flex-1">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-2xl font-bold text-gray-800">
@@ -209,13 +221,10 @@ export default function FindDoctorsPage() {
               </div>
             </div>
 
-            <DoctorsList 
-              searchQuery={searchQuery}
-              specialtyFilter={specialtyFilter}
-              locationFilter={locationFilter}
-              availabilityFilter={availabilityFilter}
-              ratingFilter={ratingFilter}
-            />
+            
+<DoctorsList doctors={doctors} loading={loading} />
+
+
           </div>
         </div>
       </div>

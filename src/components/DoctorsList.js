@@ -14,6 +14,10 @@ const doctors = [
     reviews: 124,
     location: 'Apollo Hospital, New York',
     availableToday: true,
+
+
+
+    
     consultationFee: '$150',
     image: '/doctor1.jpg',
     languages: ['English', 'Spanish'],
