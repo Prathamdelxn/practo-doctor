@@ -1,604 +1,634 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { 
-  Calendar,
+import React, { useState, useEffect } from 'react';
+import {
   Clock,
-  User,
-  MapPin,
-  Phone,
-  Mail,
   Search,
-  Filter,
   Plus,
-  Printer,
-  CheckCircle,
-  AlertCircle,
-  XCircle,
-  Eye,
-  Edit,
-  Trash2,
-  Video,
-  MessageSquare,
+  ChevronDown,
+  Check,
+  X,
   MoreVertical,
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  X
+  User,
+  Phone,
+  Stethoscope,
+  Pill,
+  FileText,
+  CheckCircle
 } from 'lucide-react';
 
-export default function AppointmentsPage() {
-  const [selectedView, setSelectedView] = useState('list'); // 'list', 'calendar'
-  const [selectedFilter, setSelectedFilter] = useState('all'); // 'all', 'today', 'upcoming', 'completed', 'cancelled'
+const DoctorAppointmentsDashboard = () => {
+  const [appointments, setAppointments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [selectedAppointment, setSelectedAppointment] = useState(null);
-
-  // Sample appointments data
-  const appointments = [
-    {
-      id: 1,
-      patient: {
-        name: 'John Smith',
-        age: 45,
-        phone: '+1 (555) 123-4567',
-        email: 'john.smith@email.com',
-        avatar: 'JS'
-      },
-      hospital: 'City General Hospital',
-      date: '2025-06-02',
-      time: '10:00 AM',
-      duration: '30 min',
-      type: 'Consultation',
-      status: 'confirmed',
-      notes: 'Regular checkup for hypertension',
-      isVirtual: false
-    },
-    {
-      id: 2,
-      patient: {
-        name: 'Sarah Johnson',
-        age: 32,
-        phone: '+1 (555) 234-5678',
-        email: 'sarah.j@email.com',
-        avatar: 'SJ'
-      },
-      hospital: 'St. Mary\'s Medical Center',
-      date: '2025-06-02',
-      time: '11:30 AM',
-      duration: '45 min',
-      type: 'Follow-up',
-      status: 'pending',
-      notes: 'Post-surgery follow-up appointment',
-      isVirtual: true
-    },
-    {
-      id: 3,
-      patient: {
-        name: 'Mike Davis',
-        age: 58,
-        phone: '+1 (555) 345-6789',
-        email: 'mike.davis@email.com',
-        avatar: 'MD'
-      },
-      hospital: 'Metro Heart Institute',
-      date: '2025-06-02',
-      time: '2:00 PM',
-      duration: '60 min',
-      type: 'Cardiology Exam',
-      status: 'confirmed',
-      notes: 'Comprehensive cardiac evaluation',
-      isVirtual: false
-    },
-    {
-      id: 4,
-      patient: {
-        name: 'Emily Brown',
-        age: 28,
-        phone: '+1 (555) 456-7890',
-        email: 'emily.brown@email.com',
-        avatar: 'EB'
-      },
-      hospital: 'City General Hospital',
-      date: '2025-06-02',
-      time: '3:30 PM',
-      duration: '30 min',
-      type: 'Consultation',
-      status: 'cancelled',
-      notes: 'Patient cancelled due to emergency',
-      isVirtual: false
-    },
-    {
-      id: 5,
-      patient: {
-        name: 'Robert Wilson',
-        age: 41,
-        phone: '+1 (555) 567-8901',
-        email: 'robert.w@email.com',
-        avatar: 'RW'
-      },
-      hospital: 'Sunrise Community Hospital',
-      date: '2025-06-03',
-      time: '9:00 AM',
-      duration: '30 min',
-      type: 'Consultation',
-      status: 'confirmed',
-      notes: 'Initial consultation for chest pain',
-      isVirtual: true
-    },
-    {
-      id: 6,
-      patient: {
-        name: 'Lisa Anderson',
-        age: 35,
-        phone: '+1 (555) 678-9012',
-        email: 'lisa.and@email.com',
-        avatar: 'LA'
-      },
-      hospital: 'St. Mary\'s Medical Center',
-      date: '2025-06-03',
-      time: '1:00 PM',
-      duration: '45 min',
-      type: 'Follow-up',
-      status: 'completed',
-      notes: 'Routine follow-up - patient doing well',
-      isVirtual: false
-    }
-  ];
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'confirmed': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'cancelled': return 'bg-red-100 text-red-800';
-      case 'completed': return 'bg-blue-100 text-blue-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'confirmed': return <CheckCircle className="w-4 h-4 text-green-500" />;
-      case 'pending': return <Clock className="w-4 h-4 text-yellow-500" />;
-      case 'cancelled': return <XCircle className="w-4 h-4 text-red-500" />;
-      case 'completed': return <CheckCircle className="w-4 h-4 text-blue-500" />;
-      default: return <Clock className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
-  const filteredAppointments = appointments.filter(appointment => {
-    const matchesSearch = appointment.patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.hospital.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    if (selectedFilter === 'all') return matchesSearch;
-    if (selectedFilter === 'today') return matchesSearch && appointment.date === selectedDate;
-    if (selectedFilter === 'upcoming') return matchesSearch && new Date(appointment.date) > new Date();
-    return matchesSearch && appointment.status === selectedFilter;
+  const [activeTab, setActiveTab] = useState('all');
+  const [expandedAppointment, setExpandedAppointment] = useState(null);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(null);
+  const [showPrescriptionForm, setShowPrescriptionForm] = useState(null);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [userId, setId] = useState("");
+  const [prescription, setPrescription] = useState({
+    medicines: [{ name: '', dosage: '', frequency: '', duration: '' }],
+    additionalNotes: ''
   });
 
-  const todayAppointments = appointments.filter(apt => apt.date === selectedDate);
-  const upcomingAppointments = appointments.filter(apt => new Date(apt.date) > new Date());
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const data = JSON.parse(user);
+      setId(data?.id);
+    }
+  }, []);
 
-  const openViewModal = (appointment) => {
-    setSelectedAppointment(appointment);
-    setViewModalOpen(true);
+  const fetchAppointmentsByDoc = async (doctorId) => {
+    try {
+      const res = await fetch(`https://practo-backend.vercel.app/api/appointment/fetchbydoctor/${doctorId}`);
+      if (!res.ok) {
+        throw new Error('Failed to fetch appointments');
+      }
+      const response = await res.json();
+      setAppointments(response.data || []);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+    }
   };
 
+  useEffect(() => {
+    if (userId) {
+      fetchAppointmentsByDoc(userId);
+    }
+  }, [userId]);
+
+  // Status styling
+  const statusStyles = {
+    confirmed: {
+      bg: 'bg-emerald-500/10',
+      text: 'text-emerald-600',
+      icon: <Check className="w-4 h-4 text-emerald-500" />,
+      border: 'border-emerald-500/20'
+    },
+    checkedIn: {
+      bg: 'bg-blue-500/10',
+      text: 'text-blue-600',
+      icon: <CheckCircle className="w-4 h-4 text-blue-500" />,
+      border: 'border-blue-500/20'
+    },
+    cancelled: {
+      bg: 'bg-rose-500/10',
+      text: 'text-rose-600',
+      icon: <X className="w-4 h-4 text-rose-500" />,
+      border: 'border-rose-500/20'
+    }
+  };
+
+  // Status options for dropdown
+  const statusOptions = [
+    { value: 'confirmed', label: 'Confirmed', color: 'text-emerald-600' },
+    { value: 'checkedIn', label: 'Checked In', color: 'text-blue-600' },
+    { value: 'cancelled', label: 'Cancelled', color: 'text-rose-600' }
+  ];
+
+  // Filter appointments based on active tab and search term
+  const filteredAppointments = appointments.filter(appointment => {
+    const matchesSearch = appointment.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         appointment.patientNote?.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    let matchesTab = true;
+    // if (activeTab === 'checkedIn') {
+    //   matchesTab = appointment.status === 'checkedIn';
+    // } else if (activeTab === 'cancelled') {
+    //   matchesTab = appointment.status === 'cancelled';
+    // }
+    
+     if (activeTab === 'all') {
+    matchesTab = appointment.status === 'confirmed';  // Only show confirmed appointments in "All" tab
+  } else if (activeTab === 'checkedIn') {
+    matchesTab = appointment.status === 'checkedIn';
+  } else if (activeTab === 'cancelled') {
+    matchesTab = appointment.status === 'cancelled';
+  }
+    return matchesSearch && matchesTab;
+  });
+
+  // Update appointment status
+  const updateAppointmentStatus = async (appointmentId, newStatus) => {
+    setIsUpdatingStatus(true);
+    try {
+      // For checkedIn status, just expand and show form (don't update status yet)
+      if (newStatus === 'checkedIn') {
+        setExpandedAppointment(appointmentId);
+        setShowPrescriptionForm(appointmentId);
+        setIsUpdatingStatus(false);
+        setShowStatusDropdown(null);
+        return;
+      }
+      
+      // For other status changes, update immediately
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      setAppointments(prevAppointments => 
+        prevAppointments.map(appointment => 
+          appointment.id === appointmentId 
+            ? { ...appointment, status: newStatus }
+            : appointment
+        )
+      );
+    } catch (error) {
+      console.error("Error updating appointment status:", error);
+    } finally {
+      setIsUpdatingStatus(false);
+      setShowStatusDropdown(null);
+    }
+  };
+
+  // Handle prescription input changes
+  const handlePrescriptionChange = (e, index) => {
+    const { name, value } = e.target;
+    const updatedMedicines = [...prescription.medicines];
+    updatedMedicines[index] = {
+      ...updatedMedicines[index],
+      [name]: value
+    };
+    setPrescription(prev => ({
+      ...prev,
+      medicines: updatedMedicines
+    }));
+  };
+
+  // Add new medicine field
+  const addMedicineField = () => {
+    setPrescription(prev => ({
+      ...prev,
+      medicines: [...prev.medicines, { name: '', dosage: '', frequency: '', duration: '' }]
+    }));
+  };
+
+  // Remove medicine field
+  const removeMedicineField = (index) => {
+    const updatedMedicines = [...prescription.medicines];
+    updatedMedicines.splice(index, 1);
+    setPrescription(prev => ({
+      ...prev,
+      medicines: updatedMedicines
+    }));
+  };
+
+  // Validate prescription form
+  const validatePrescription = () => {
+    return prescription.medicines.every(med => 
+      med.name && med.dosage && med.frequency && med.duration
+    ) && prescription.additionalNotes;
+  };
+
+  // Submit prescription
+  // const submitPrescription = (appointmentId) => {
+  //   if (!validatePrescription()) {
+  //     alert('Please fill all medicine details and additional notes');
+  //     return;
+  //   }
+    
+  //   console.log('Prescription submitted for appointment:', appointmentId, prescription);
+    
+  //   // Update appointment status to checkedIn after successful submission
+  //   setAppointments(prevAppointments => 
+  //     prevAppointments.map(appointment => 
+  //       appointment.id === appointmentId 
+  //         ? { ...appointment, status: 'checkedIn' }
+  //         : appointment
+  //     )
+  //   );
+    
+  //   // Reset prescription form
+  //   setPrescription({
+  //     medicines: [{ name: '', dosage: '', frequency: '', duration: '' }],
+  //     additionalNotes: ''
+  //   });
+  //   setShowPrescriptionForm(null);
+  // };
+
+const submitPrescription = async (appointmentId) => {
+  if (!validatePrescription()) {
+    alert('Please fill all medicine details and additional notes');
+    return;
+  }
+  
+  try {
+    // First update the prescription data
+    const prescriptionResponse = await fetch('https://practo-backend.vercel.app/api/appointment/addMedicines', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        appointmentId,
+        description: prescription.additionalNotes,
+        medicines: prescription.medicines
+      }),
+    });
+
+    if (!prescriptionResponse.ok) {
+      throw new Error('Failed to update prescription');
+    }
+
+    // Then update the status to 'checkedIn'
+    const statusResponse = await fetch('https://practo-backend.vercel.app/api/appointment/updateStatus', {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        appointmentId,
+        status: 'checkedIn'
+      }),
+    });
+
+    if (!statusResponse.ok) {
+      throw new Error('Failed to update status');
+    }
+
+    const statusData = await statusResponse.json();
+    
+    // Update local state
+    setAppointments(prevAppointments => 
+      prevAppointments.map(appointment => 
+        appointment._id === appointmentId 
+          ? { 
+              ...appointment, 
+              status: 'checkedIn',
+              medicines: prescription.medicines,
+              description: prescription.additionalNotes
+            }
+          : appointment
+      )
+    );
+    
+    // Reset form
+    setPrescription({
+      medicines: [{ name: '', dosage: '', frequency: '', duration: '' }],
+      additionalNotes: ''
+    });
+    setShowPrescriptionForm(null);
+      setExpandedAppointment(null); 
+    
+  } catch (error) {
+    console.error("Error submitting prescription:", error);
+    // Optionally show error to user
+  }
+};
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Appointments</h1>
-          <p className="text-gray-600 mt-1">Manage your patient appointments across all hospitals</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button className="bg-white border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 flex items-center space-x-2">
-            <Download className="w-4 h-4" />
-            <span>Export</span>
-          </button>
-          <button className="bg-gradient-to-r from-blue-600 to-indigo-700 text-white px-6 py-2 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center space-x-2">
-            <Plus className="w-5 h-5" />
-            <span>New Appointment</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Today's Appointments</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{todayAppointments.length}</p>
-            </div>
-            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <Calendar className="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Upcoming</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{upcomingAppointments.length}</p>
-            </div>
-            <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <Clock className="w-5 h-5 text-green-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{appointments.filter(a => a.status === 'completed').length}</p>
-            </div>
-            <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-5 h-5 text-purple-600" />
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Cancelled</p>
-              <p className="text-2xl font-bold text-gray-900 mt-1">{appointments.filter(a => a.status === 'cancelled').length}</p>
-            </div>
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <XCircle className="w-5 h-5 text-red-600" />
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Filters and Search */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
-          <div className="flex flex-wrap items-center gap-4">
-            {/* View Toggle */}
-            <div className="flex bg-gray-100 rounded-lg p-1">
-              <button
-                onClick={() => setSelectedView('list')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  selectedView === 'list' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                List View
-              </button>
-              <button
-                onClick={() => setSelectedView('calendar')}
-                className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                  selectedView === 'calendar' 
-                    ? 'bg-white text-blue-600 shadow-sm' 
-                    : 'text-gray-600 hover:text-gray-900'
-                }`}
-              >
-                Calendar View
-              </button>
-            </div>
-
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { key: 'all', label: 'All' },
-                { key: 'today', label: 'Today' },
-                { key: 'upcoming', label: 'Upcoming' },
-                { key: 'completed', label: 'Completed' },
-                { key: 'cancelled', label: 'Cancelled' }
-              ].map((filter) => (
-                <button
-                  key={filter.key}
-                  onClick={() => setSelectedFilter(filter.key)}
-                  className={`px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-                    selectedFilter === filter.key
-                      ? 'bg-blue-100 text-blue-700'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Search */}
-          <div className="relative w-full lg:w-80">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search patients or hospitals..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Appointments List */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-        <div className="p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {selectedFilter === 'all' ? 'All Appointments' : 
-             selectedFilter === 'today' ? 'Today\'s Appointments' :
-             selectedFilter.charAt(0).toUpperCase() + selectedFilter.slice(1) + ' Appointments'}
-          </h2>
-          <p className="text-gray-600 mt-1">{filteredAppointments.length} appointments found</p>
-        </div>
-        
-        <div className="divide-y divide-gray-200">
-          {filteredAppointments.length === 0 ? (
-            <div className="p-12 text-center">
-              <Calendar className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">No appointments found</p>
-              <p className="text-gray-400 mt-2">Try adjusting your filters or search terms</p>
-            </div>
-          ) : (
-            filteredAppointments.map((appointment) => (
-              <div key={appointment.id} className="p-6 hover:bg-gray-50 transition-colors duration-200">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    {/* Patient Avatar */}
-                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
-                      {appointment.patient.avatar}
-                    </div>
-                    
-                    {/* Appointment Details */}
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <h3 className="text-lg font-semibold text-gray-900">{appointment.patient.name}</h3>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-sm text-gray-600">Age {appointment.patient.age}</span>
-                        {appointment.isVirtual && (
-                          <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium flex items-center">
-                            <Video className="w-3 h-3 mr-1" />
-                            Virtual
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                        <div className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(appointment.date).toLocaleDateString()} at {appointment.time}
-                        </div>
-                        <div className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {appointment.duration}
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {appointment.hospital}
-                        </div>
-                      </div>
-                      
-                      <div className="mt-2">
-                        <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          {appointment.type}
-                        </span>
-                        {appointment.notes && (
-                          <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Status and Actions */}
-                  <div className="flex items-center space-x-4">
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(appointment.status)}
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(appointment.status)}`}>
-                        {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
-                      </span>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      {appointment.status === 'confirmed' && (
-                        <>
-                          {appointment.isVirtual ? (
-                            <button className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg">
-                              <Video className="w-4 h-4" />
-                            </button>
-                          ) : (
-                            <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                              <MapPin className="w-4 h-4" />
-                            </button>
-                          )}
-                          <button className="p-2 text-green-600 hover:bg-green-50 rounded-lg">
-                            <MessageSquare className="w-4 h-4" />
-                          </button>
-                        </>
-                      )}
-                      
-                      <button 
-                        onClick={() => openViewModal(appointment)}
-                        className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg"
-                      >
-                        <Eye className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg">
-                        <Edit className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-red-600 hover:bg-red-50 rounded-lg">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                      <button className="p-2 text-gray-600 hover:bg-gray-50 rounded-lg">
-                        <MoreVertical className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-sm p-6 mb-6 border border-white/80">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg">
+                <Stethoscope className="text-white w-6 h-6" />
               </div>
-            ))
-          )}
+              <div>
+                <h1 className="text-2xl font-bold text-gray-800">Doctor's Dashboard</h1>
+                <p className="text-sm text-gray-500/90">Manage patient appointments and prescriptions</p>
+              </div>
+            </div>
+          </div>
         </div>
-        
-        {/* Pagination */}
-        {filteredAppointments.length > 0 && (
-          <div className="p-6 border-t border-gray-200">
+
+        {/* Search and Filters */}
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-sm p-5 mb-6 border border-white/80">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="relative flex-grow">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="text-blue-500/80 w-5 h-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Search patients or notes..."
+                className="w-full pl-11 pr-4 py-3 text-sm border border-gray-200/70 rounded-xl focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 transition-all bg-white/50"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-sm overflow-hidden border border-white/80 mb-6">
+          <div className="flex border-b border-gray-200/50">
+            <button
+              onClick={() => setActiveTab('all')}
+              className={`flex-1 py-3 px-4 text-center font-medium text-sm transition-colors ${activeTab === 'all' ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'}`}
+            >
+              All Appointments
+            </button>
+            <button
+              onClick={() => setActiveTab('checkedIn')}
+              className={`flex-1 py-3 px-4 text-center font-medium text-sm transition-colors ${activeTab === 'checkedIn' ? 'text-blue-600 border-b-2 border-blue-500' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'}`}
+            >
+              Checked In
+            </button>
+            <button
+              onClick={() => setActiveTab('cancelled')}
+              className={`flex-1 py-3 px-4 text-center font-medium text-sm transition-colors ${activeTab === 'cancelled' ? 'text-rose-600 border-b-2 border-rose-500' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50/50'}`}
+            >
+              Cancelled
+            </button>
+          </div>
+        </div>
+
+        {/* Appointments List */}
+        <div className="bg-white/70 backdrop-blur-lg rounded-2xl shadow-sm overflow-hidden border border-white/80">
+          <div className="p-5 border-b border-gray-200/50">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-gray-700">
-                Showing <span className="font-medium">1</span> to <span className="font-medium">{filteredAppointments.length}</span> of{' '}
-                <span className="font-medium">{filteredAppointments.length}</span> results
-              </p>
-              <div className="flex items-center space-x-2">
-                <button className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50">
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button className="px-3 py-1 bg-blue-600 text-white rounded-md text-sm">1</button>
-                <button className="p-2 text-gray-400 hover:text-gray-600 disabled:opacity-50">
-                  <ChevronRight className="w-4 h-4" />
-                </button>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {activeTab === 'all' && 'All Appointments'}
+                {activeTab === 'checkedIn' && 'Checked In Appointments'}
+                {activeTab === 'cancelled' && 'Cancelled Appointments'}
+              </h3>
+              <div className="text-xs text-blue-600 font-medium bg-blue-100/30 px-3 py-1.5 rounded-full border border-blue-200/50">
+                {filteredAppointments.length} {filteredAppointments.length === 1 ? 'appointment' : 'appointments'}
               </div>
             </div>
           </div>
-        )}
-      </div>
 
-      {/* View Appointment Modal */}
-{viewModalOpen && selectedAppointment && (
-  <div className="fixed inset-0 backdrop-blur-sm bg-black/30 flex items-center justify-center p-4 z-50">
-    <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto animate-fade-in">
-      {/* Modal Header */}
-      <div className="flex justify-between items-center border-b border-blue-200 p-6 sticky top-0 bg-gradient-to-r from-blue-50 to-indigo-100 z-10">
-        <div className="flex items-center">
-          <Calendar className="text-blue-600 mr-3" size={24} />
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">Appointment Details</h2>
-            <div className="flex items-center space-x-2 mt-1">
-              {getStatusIcon(selectedAppointment.status)}
-              <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(selectedAppointment.status)}`}>
-                {selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
-              </span>
-              {selectedAppointment.isVirtual && (
-                <span className="bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-xs font-medium flex items-center">
-                  <Video className="w-3 h-3 mr-1" />
-                  Virtual
-                </span>
-              )}
-            </div>
+          <div className="divide-y divide-gray-200/30">
+            {filteredAppointments.length > 0 ? (
+              filteredAppointments.map((appointment) => (
+                <div 
+                  key={appointment._id} 
+                  className={`relative transition-all duration-200 ${
+                    expandedAppointment === appointment.id || showStatusDropdown === appointment.id 
+                      ? 'bg-blue-50/20 min-h-[200px]' 
+                      : 'hover:bg-blue-50/10 min-h-[100px]'
+                  }`}
+                  onClick={(e) => {
+                    // Don't toggle if clicking on status dropdown or prescription form
+                    if (!e.target.closest('.status-dropdown') && !e.target.closest('.prescription-form')) {
+                      setExpandedAppointment(expandedAppointment === appointment.id ? null : appointment.id);
+                    }
+                  }}
+                >
+                  {/* Appointment Row */}
+                  <div className="grid grid-cols-12 gap-4 items-center p-4 md:p-5">
+                    {/* Patient Column */}
+                    <div className="col-span-12 md:col-span-3 flex items-center gap-4">
+                      <div className="relative flex-shrink-0">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-100 to-indigo-100 flex items-center justify-center border border-white/80 shadow-sm">
+                          <User className="text-blue-600 w-5 h-5" />
+                        </div>
+                        <span className={`absolute -bottom-1 -right-1 w-3.5 h-3.5 rounded-full border-2 border-white ${statusStyles[appointment.status]?.border || 'border-gray-300'}`}></span>
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{appointment.patientName}</p>
+                        <p className="text-xs text-gray-500/90 flex items-center gap-1.5 mt-1">
+                          <Phone className="w-3 h-3 flex-shrink-0 text-blue-500/70" />
+                          <span className="truncate">{appointment.patientNumber}</span>
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Time Column */}
+                    <div className="col-span-6 md:col-span-2">
+                      <div className="flex items-center gap-2">
+                        <Clock className="text-blue-500/80 w-4 h-4 flex-shrink-0" />
+                        <span className="text-sm text-gray-700">
+                          {appointment.time}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Reason Column */}
+                    <div className="hidden md:block col-span-4">
+                      <p className="text-sm text-gray-600/90 truncate">
+                        {appointment.patientNote}
+                      </p>
+                    </div>
+                    
+                    {/* Status Column */}
+                    <div className="col-span-6 md:col-span-2 relative">
+                      <div className="status-dropdown">
+                        {activeTab === 'all' && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setShowStatusDropdown(showStatusDropdown === appointment.id ? null : appointment.id);
+                            }}
+                            disabled={isUpdatingStatus}
+                            className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium transition-all hover:shadow-sm disabled:opacity-50 ${statusStyles[appointment.status]?.bg || 'bg-gray-100'} ${statusStyles[appointment.status]?.text || 'text-gray-600'} border ${statusStyles[appointment.status]?.border || 'border-gray-300'}`}
+                          >
+                            {statusStyles[appointment.status]?.icon || <Clock className="w-4 h-4" />}
+                            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                            <ChevronDown size={12} />
+                          </button>
+                        )}
+                        
+                        {activeTab !== 'all' && (
+                          <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium ${statusStyles[appointment.status]?.bg || 'bg-gray-100'} ${statusStyles[appointment.status]?.text || 'text-gray-600'} border ${statusStyles[appointment.status]?.border || 'border-gray-300'}`}>
+                            {statusStyles[appointment.status]?.icon || <Clock className="w-4 h-4" />}
+                            {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                          </div>
+                        )}
+                        
+                        {/* Status Dropdown Menu */}
+                        {showStatusDropdown === appointment.id && activeTab === 'all' && (
+                          <div className="absolute top-full left-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-200/70 z-30 overflow-hidden">
+                            {statusOptions.map((status) => (
+                              <button
+                                key={status.value}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateAppointmentStatus(appointment.id, status.value);
+                                }}
+                                disabled={isUpdatingStatus || appointment.status === status.value}
+                                className={`w-full px-3 py-2 text-left text-sm hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${status.color}`}
+                              >
+                                {statusStyles[status.value]?.icon}
+                                {status.label}
+                                {appointment.status === status.value && (
+                                  <Check className="w-3 h-3 ml-auto" />
+                                )}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Actions Column */}
+                    <div className="col-span-6 md:col-span-1 flex justify-end">
+                      <button 
+                        className="p-1.5 text-gray-400/90 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100/50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setExpandedAppointment(expandedAppointment === appointment.id ? null : appointment.id);
+                        }}
+                      >
+                        <MoreVertical size={18} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Expanded Details */}
+                  {(expandedAppointment === appointment.id || appointment.status === 'checkedIn') && (
+                    <div className="px-6 pb-4 border-t border-gray-200/30 bg-blue-50/10 prescription-form">
+                      <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">Patient Information</h5>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p><span className="font-medium">Email:</span> {appointment.patientEmail}</p>
+                            <p><span className="font-medium">Phone:</span> {appointment.patientNumber}</p>
+                          </div>
+                        </div>
+                        <div>
+                          <h5 className="text-sm font-medium text-gray-700 mb-2">Appointment Details</h5>
+                          <div className="space-y-1 text-sm text-gray-600">
+                            <p><span className="font-medium">Date:</span> {appointment.appointmentDate}</p>
+                            <p><span className="font-medium">Time:</span> {appointment.time}</p>
+                            <p><span className="font-medium">Notes:</span> {appointment.patientNote}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Prescription Form (shown when status is checkedIn or being changed to checkedIn) */}
+                      {(showPrescriptionForm === appointment.id || appointment.status === 'checkedIn') && (
+                        <div className="mt-6 bg-white/80 p-4 rounded-lg border border-gray-200/50">
+                          <h5 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                            <Pill className="text-blue-500 w-4 h-4" />
+                            Prescription
+                          </h5>
+                          
+                          {prescription.medicines.map((medicine, index) => (
+                            <div key={index} className="grid grid-cols-12 gap-3 mb-3">
+                              <div className="col-span-5">
+                                <label className="block text-xs text-gray-500 mb-1">Medicine Name</label>
+                                <input
+                                  type="text"
+                                  name="name"
+                                  value={medicine.name}
+                                  onChange={(e) => handlePrescriptionChange(e, index)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                  placeholder="e.g., Paracetamol"
+                                  required
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <label className="block text-xs text-gray-500 mb-1">Dosage</label>
+                                <input
+                                  type="text"
+                                  name="dosage"
+                                  value={medicine.dosage}
+                                  onChange={(e) => handlePrescriptionChange(e, index)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                  placeholder="e.g., 500mg"
+                                  required
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <label className="block text-xs text-gray-500 mb-1">Frequency</label>
+                                <input
+                                  type="text"
+                                  name="frequency"
+                                  value={medicine.frequency}
+                                  onChange={(e) => handlePrescriptionChange(e, index)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                  placeholder="e.g., 2x daily"
+                                  required
+                                />
+                              </div>
+                              <div className="col-span-2">
+                                <label className="block text-xs text-gray-500 mb-1">Duration</label>
+                                <input
+                                  type="text"
+                                  name="duration"
+                                  value={medicine.duration}
+                                  onChange={(e) => handlePrescriptionChange(e, index)}
+                                  className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                                  placeholder="e.g., 7 days"
+                                  required
+                                />
+                              </div>
+                              <div className="col-span-1 flex items-end">
+                                {index > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => removeMedicineField(index)}
+                                    className="p-2 text-rose-500 hover:text-rose-700"
+                                  >
+                                    <X size={16} />
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                          ))}
+                          
+                          <button
+                            type="button"
+                            onClick={addMedicineField}
+                            className="text-xs text-blue-600 hover:text-blue-800 flex items-center gap-1 mb-4"
+                          >
+                            <Plus size={14} />
+                            Add another medicine
+                          </button>
+                          
+                          <div className="mb-4">
+                            <label className="block text-xs text-gray-500 mb-1">Additional Notes</label>
+                            <textarea
+                              name="additionalNotes"
+                              value={prescription.additionalNotes}
+                              onChange={(e) => setPrescription(prev => ({ ...prev, additionalNotes: e.target.value }))}
+                              rows={2}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg"
+                              placeholder="Any additional instructions..."
+                              required
+                            />
+                          </div>
+                          
+                          <div className="flex justify-end gap-3">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setShowPrescriptionForm(null);
+                                setPrescription({
+                                  medicines: [{ name: '', dosage: '', frequency: '', duration: '' }],
+                                  additionalNotes: ''
+                                });
+                              }}
+                              className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => submitPrescription(appointment._id)}
+                              className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-sm rounded-lg transition-all flex items-center gap-2"
+                            >
+                              <FileText size={16} />
+                              Submit Prescription
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="p-8 text-center">
+                <div className="mx-auto w-16 h-16 rounded-xl bg-blue-100/30 border border-blue-200/30 flex items-center justify-center mb-4 shadow-inner">
+                  <Search className="text-blue-500/80 w-6 h-6" />
+                </div>
+                <h4 className="text-lg font-medium text-gray-700 mb-1">No appointments found</h4>
+                <p className="text-sm text-gray-500/90">
+                  {activeTab === 'all' && 'Try adjusting your search criteria'}
+                  {activeTab === 'checkedIn' && 'No checked-in appointments found'}
+                  {activeTab === 'cancelled' && 'No cancelled appointments found'}
+                </p>
+              </div>
+            )}
           </div>
         </div>
-        <button
-          onClick={() => setViewModalOpen(false)}
-          className="text-blue-500 hover:text-blue-700 transition-colors duration-200"
-          aria-label="Close modal"
-        >
-          <X size={24} />
-        </button>
       </div>
-
-      {/* Modal Content */}
-      <div className="p-6 space-y-6">
-        {/* Patient Information Card */}
-        <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl border border-green-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <User className="mr-2 text-green-600" size={20} />
-            Patient Information
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="flex items-start space-x-4">
-              <div className="w-14 h-14 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-xl">
-                {selectedAppointment.patient.avatar}
-              </div>
-              <div className="space-y-2">
-                <p className="text-lg font-semibold text-gray-800">{selectedAppointment.patient.name}</p>
-                <p className="text-gray-600">Age: {selectedAppointment.patient.age}</p>
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex items-center text-gray-600">
-                <Phone className="w-4 h-4 mr-2" />
-                <span>{selectedAppointment.patient.phone}</span>
-              </div>
-              <div className="flex items-center text-gray-600">
-                <Mail className="w-4 h-4 mr-2" />
-                <span>{selectedAppointment.patient.email}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Appointment Details Card */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-200 shadow-sm">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-            <Calendar className="mr-2 text-blue-600" size={20} />
-            Appointment Details
-          </h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500 font-medium">Date & Time</p>
-              <p className="text-gray-800">
-                {new Date(selectedAppointment.date).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'long'
-                })}
-                <span className="ml-2 text-blue-600">{selectedAppointment.time}</span>
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500 font-medium">Duration</p>
-              <p className="text-gray-800">{selectedAppointment.duration}</p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500 font-medium">Location</p>
-              <p className="text-gray-800 flex items-start">
-                <MapPin className="w-4 h-4 mr-1.5 mt-0.5 flex-shrink-0" />
-                <span>{selectedAppointment.hospital}</span>
-              </p>
-            </div>
-            <div className="space-y-2">
-              <p className="text-sm text-gray-500 font-medium">Type</p>
-              <p className="text-gray-800">{selectedAppointment.type}</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Notes Card */}
-        {selectedAppointment.notes && (
-          <div className="bg-gradient-to-r from-gray-50 to-slate-50 p-6 rounded-xl border border-gray-200 shadow-sm">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-              <MessageSquare className="mr-2 text-gray-600" size={20} />
-              Notes
-            </h3>
-            <div className="bg-white p-4 rounded-lg border border-gray-100 shadow-xs">
-              <p className="text-gray-800 whitespace-pre-line">{selectedAppointment.notes}</p>
-            </div>
-        </div>
-        )}
-      </div>
-
-      {/* Modal Footer */}
-      <div className="bg-gray-50 px-6 py-4 border-t border-blue-200 flex justify-end space-x-3 sticky bottom-0">
-        <button
-          className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
-        >
-          <Printer className="mr-2" size={16} /> Print
-        </button>
-        <button
-          className="flex items-center px-4 py-2 bg-white border border-blue-200 rounded-lg text-blue-700 hover:bg-blue-50 transition-colors duration-200 shadow-sm"
-        >
-          <Download className="mr-2" size={16} /> Download
-        </button>
-        <button
-          onClick={() => setViewModalOpen(false)}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 shadow-sm"
-        >
-          Close
-        </button>
-      </div>
-    </div>
-  </div>
-)}
     </div>
   );
-}
+};
+
+export default DoctorAppointmentsDashboard;

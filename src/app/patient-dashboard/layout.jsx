@@ -142,6 +142,9 @@ useEffect(() => {
                 </div>
                 <span className="font-medium">John Doe</span>
               </div>
+              <Link href="/">
+                Home
+              </Link>
             </div>
           </div>
         </header>

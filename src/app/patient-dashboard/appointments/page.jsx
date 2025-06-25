@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { FiCalendar, FiPlus, FiX, FiClock, FiUser, FiMapPin, FiPhone, FiMail, FiInfo } from 'react-icons/fi';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
@@ -19,8 +19,8 @@ export default function AppointmentsPage() {
     notes: ''
   });
   const [formErrors, setFormErrors] = useState({});
-  
-  const appointments = [
+  const [userId,setId]=useState("");
+  const [appointments,setAppointment]=useState([
     { 
       id: 1, 
       doctor: 'Dr. Sarah Johnson', 
@@ -65,7 +65,99 @@ export default function AppointmentsPage() {
       phone: '(555) 789-0123',
       notes: 'Follow-up for knee surgery recovery'
     },
-  ];
+  ])
+useEffect(() => {
+      const token = localStorage.getItem('token')
+      const userStr = localStorage.getItem('user')
+      const user=JSON.parse(userStr);
+      console.log("userDAta",user)
+      setId(user?.id)
+      
+},[])
+  useEffect(()=>{
+    const fetchAppointments=async()=>{
+      try{
+        if (!userId) return; 
+        const res=await fetch(`https://practo-backend.vercel.app/api/appointment/fetch-by-patient/${userId}`)
+        const data= await res.json();
+        console.log("response is",data.data)
+        setAppointment(data.data)
+
+      }catch(err){
+        console.log("Internal Server Error",err)
+
+      }
+    }
+    fetchAppointments();
+
+  },[userId])
+
+
+
+
+  //  useEffect(()=>{
+  //   const fetchDoctor=async()=>{
+  //     try{
+  //       if (!appointments?.doctorId) return; 
+  //       const res=await fetch(`http://localhost:3001/api/doctor/fetch-by-id/${appointments?.doctorId}`)
+  //       const data= await res.json();
+  //       console.log("response  docis",data.data)
+       
+
+  //     }catch(err){
+  //       console.log("Internal Server Error",err)
+
+  //     }
+  //   }
+  //   fetchDoctor();
+
+  // },[appointments])
+  // const appointments = [
+  //   { 
+  //     id: 1, 
+  //     doctor: 'Dr. Sarah Johnson', 
+  //     specialty: 'Cardiology', 
+  //     date: '2023-06-15', 
+  //     time: '10:30 AM', 
+  //     status: 'confirmed',
+  //     location: 'Cardio Center, Room 302',
+  //     phone: '(555) 123-4567',
+  //     email: 's.johnson@medicalcenter.com',
+  //     notes: 'Please bring your recent test results and arrive 15 minutes early for paperwork.'
+  //   },
+  //   { 
+  //     id: 2, 
+  //     doctor: 'Dr. Michael Chen', 
+  //     specialty: 'Dermatology', 
+  //     date: '2023-06-20', 
+  //     time: '2:15 PM', 
+  //     status: 'pending',
+  //     location: 'Dermatology Clinic, Suite 105',
+  //     phone: '(555) 987-6543',
+  //     email: 'm.chen@dermclinic.org'
+  //   },
+  //   { 
+  //     id: 3, 
+  //     doctor: 'Dr. Emily Wilson', 
+  //     specialty: 'Pediatrics', 
+  //     date: '2023-05-28', 
+  //     time: '9:00 AM', 
+  //     status: 'completed',
+  //     location: "Children's Hospital, Wing B",
+  //     phone: '(555) 456-7890'
+  //   },
+  //   { 
+  //     id: 4, 
+  //     doctor: 'Dr. Robert Garcia', 
+  //     specialty: 'Orthopedics', 
+  //     date: '2023-05-15', 
+  //     time: '11:45 AM', 
+  //     status: 'completed',
+  //     location: 'Orthopedic Center, Floor 3',
+  //     phone: '(555) 789-0123',
+  //     notes: 'Follow-up for knee surgery recovery'
+  //   },
+  // ];
 
   const openModal = (appointment) => {
     setSelectedAppointment(appointment);
@@ -158,13 +250,13 @@ export default function AppointmentsPage() {
           <h1 className="text-3xl font-bold text-blue-800">My Appointments</h1>
           <p className="text-blue-600 mt-1">Manage your upcoming medical visits</p>
         </div>
-        <Button 
+        {/* <Button 
           icon={<FiPlus className="text-white" />} 
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all"
           onClick={() => setShowNewAppointmentModal(true)}
         >
           New Appointment
-        </Button>
+        </Button> */}
       </div>
 
       {/* Appointments Table */}
@@ -191,28 +283,28 @@ export default function AppointmentsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-blue-50">
-              {appointments.map((appointment) => (
-                <tr key={appointment.id} className="hover:bg-blue-50 transition-colors">
+              {appointments.map((appointment,index) => (
+                <tr key={index} className="hover:bg-blue-50 transition-colors">
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                         <FiUser className="text-blue-600" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-blue-900">{appointment.doctor}</div>
-                        <div className="text-xs text-blue-500">{appointment.specialty}</div>
+                        <div className="text-sm font-medium text-blue-900">Dr. {appointment.doctorName}</div>
+                        <div className="text-xs text-blue-500">{appointment.doctorDetails?.specialty}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="text-sm text-blue-700 font-medium">{appointment.specialty}</div>
+                    <div className="text-sm text-blue-700 font-medium">{appointment.doctorDetails?.specialty}</div>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center">
                       <FiClock className="mr-2 text-blue-400" />
                       <div>
                         <div className="text-sm font-medium text-blue-900">
-                          {new Date(appointment.date).toLocaleDateString('en-US', { 
+                          {new Date(appointment.appointmentDate).toLocaleDateString('en-US', { 
                             weekday: 'short', 
                             year: 'numeric', 
                             month: 'short', 
@@ -273,7 +365,7 @@ export default function AppointmentsPage() {
                     <FiUser className="text-blue-600 text-xl" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-gray-900">{selectedAppointment.doctor}</h3>
+                    <h3 className="text-lg font-bold text-gray-900">{selectedAppointment?.doctorName}</h3>
                     <p className="text-blue-600">{selectedAppointment.specialty}</p>
                   </div>
                 </div>
@@ -284,7 +376,7 @@ export default function AppointmentsPage() {
                     <div>
                       <p className="text-sm text-gray-500">Date</p>
                       <p className="font-medium text-gray-900">
-                        {new Date(selectedAppointment.date).toLocaleDateString('en-US', { 
+                        {new Date(selectedAppointment.appointmentDate).toLocaleDateString('en-US', { 
                           weekday: 'long', 
                           year: 'numeric', 
                           month: 'long', 
@@ -317,7 +409,7 @@ export default function AppointmentsPage() {
                     <div>
                       <p className="text-sm text-gray-500">Phone</p>
                       <p className="font-medium text-gray-900">
-                        {selectedAppointment.phone || 'Not specified'}
+                        {selectedAppointment.patientNumber || 'Not specified'}
                       </p>
                     </div>
                   </div>

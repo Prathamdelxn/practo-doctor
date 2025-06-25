@@ -319,7 +319,7 @@ export default function ClinicDashboardLayout({ children }) {
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
              
-                <img src={doctor?.doctor.profileImage} alt="" className='rounded-full' />
+                <img src={doctor?.doctor.profileImage} alt="" className='rounded-full h-full' />
               </div>
               <div>
                 <p className="font-semibold capitalize">Dr. {doctor?.doctor.firstName} {doctor?.doctor.lastName}</p>
@@ -369,7 +369,7 @@ export default function ClinicDashboardLayout({ children }) {
                   className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
                 >
                   <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                  <img src={doctor?.doctor.profileImage} alt="" className='rounded-full' />
+                  <img src={doctor?.doctor.profileImage} alt="" className='rounded-full h-full' />
                   </div>
                   <div className="hidden md:block text-left">
                     <p className="text-sm font-medium text-gray-900 capitalize">Dr. {doctor?.doctor.firstName} {doctor?.doctor.lastName}</p>

@@ -1,104 +1,19 @@
-// 'use client';
-
-// import Link from 'next/link';
-// import { motion } from 'framer-motion';
-// import { 
-//   MagnifyingGlassIcon, 
-//   UserIcon, 
-//   BellIcon, 
-//   ShoppingCartIcon 
-// } from '@heroicons/react/24/outline';
-
-// export default function Navbar() {
-//   return (
-//     <motion.nav 
-//       initial={{ opacity: 0, y: -20 }}
-//       animate={{ opacity: 1, y: 0 }}
-//       transition={{ duration: 0.5 }}
-//       className="fixed w-full top-0 z-50 bg-gradient-to-r from-teal-500 to-blue-700 shadow-lg py-4 px-4 md:px-8"
-//     >
-//       <div className="max-w-7xl mx-auto flex items-center justify-between">
-//         <motion.div 
-//           whileHover={{ scale: 1.05 }}
-//           className="flex items-center"
-//         >
-//           <Link href="/" className="text-3xl font-extrabold text-white tracking-tight flex items-center">
-//             <span className="text-yellow-300">Health</span>
-//             <span>Byte</span>
-//           </Link>
-//         </motion.div>
-
-//         <div className="hidden md:flex  flex-1 mx-8">
-//           <motion.div 
-//             initial={{ opacity: 0, x: -20 }}
-//             animate={{ opacity: 1, x: 0 }}
-//             transition={{ delay: 0.2 }}
-//             className="relative w-full max-w-xl"
-//           >
-//             <input
-//               type="text"
-//               placeholder="Search doctors, clinics, hospitals..."
-//               className="w-full py-3 px-5 border-2 text-black border-teal-300 rounded-full focus:outline-none focus:ring-2 focus:ring-yellow-400 transition duration-300 bg-white/90 backdrop-blur-sm"
-//             />
-//             <motion.button 
-//               whileHover={{ scale: 1.1 }}
-//               className="absolute right-4 top-3 text-blue-600"
-//             >
-//               <MagnifyingGlassIcon className="h-5 w-5 " />
-//             </motion.button>
-//           </motion.div>
-//         </div>
-
-//         <motion.div 
-//           initial={{ opacity: 0, x: 20 }}
-//           animate={{ opacity: 1, x: 0 }}
-//           transition={{ delay: 0.3 }}
-//           className="flex items-center space-x-6"
-//         >
-//           <div className="hidden md:flex space-x-6">
-//             {['Doctors', 'Clinics', 'Hospitals', 'Medicines'].map((item) => (
-//               <motion.div 
-//                 key={item}
-//                 whileHover={{ scale: 1.05, y: -2 }}
-//                 className="text-blue-100 hover:text-yellow-300 transition font-medium"
-//               >
-//                 <Link href={`/${item.toLowerCase()}`}>{item}</Link>
-//               </motion.div>
-//             ))}
-//           </div>
-
-//           <div className="flex items-center space-x-4">
-//             <motion.button 
-//               whileHover={{ scale: 1.2, rotate: 15 }}
-//               className="text-blue-100 hover:text-yellow-300 transition"
-//             >
-//               <BellIcon className="h-6 w-6" />
-//             </motion.button>
-//             <motion.button 
-//               whileHover={{ scale: 1.05 }}
-//               whileTap={{ scale: 0.95 }}
-//               className="flex items-center space-x-2 bg-gradient-to-r from-yellow-400 to-yellow-500 text-blue-800 font-semibold px-5 py-2 rounded-full hover:from-yellow-300 hover:to-yellow-400 transition shadow-md"
-//             >
-//               <UserIcon className="h-4 w-4" />
-//               <span>Login</span>
-//             </motion.button>
-//           </div>
-//         </motion.div>
-//       </div>
-//     </motion.nav>
-//   );
-// }
 
 'use client';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import { Menu, X, Search, User, Bell } from 'lucide-react';
 import { usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 export default function Navbar() {
+  const router = useRouter();
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const[userData,setUser]=useState();
+
   const pathname = usePathname();
 
   // Function to determine if a link is active
@@ -106,6 +21,20 @@ export default function Navbar() {
     if (path === '/') return pathname === path;
     return pathname.startsWith(path);
   };
+
+useEffect(() => {
+  const token = localStorage.getItem('token');
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const data = JSON.parse(userStr);
+      setUser(data);
+    } catch (err) {
+      console.error("Error parsing user data", err);
+    }
+  }
+}, []);
+
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -156,7 +85,7 @@ export default function Navbar() {
                 type="search"
               />
             </div>
-            <div className="flex items-center space-x-3">
+            {/* <div className="flex items-center space-x-3">
               <button className="p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none">
                 <Bell className="h-6 w-6" />
               </button>
@@ -167,7 +96,55 @@ export default function Navbar() {
               <Link href="/register" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
                 Register
               </Link>
-            </div>
+            </div> */}
+            <div className="flex items-center space-x-3">
+  <button className="p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none">
+    <Bell className="h-6 w-6" />
+  </button>
+  <div className="border-l border-gray-300 h-6 mx-1"></div>
+
+  {userData ? (
+    <>
+      <button
+        onClick={() => {
+          if (userData.role === 'patient') {
+            router.push('/patient-dashboard');
+          } else if (userData.role === 'doctor') {
+            router.push('/doctor-dashboard');
+          } else {
+            router.push('/dashboard'); // default fallback
+          }
+        }}
+        className="px-4 py-2 text-sm font-medium text-blue-600 hover:bg-blue-100 rounded-md"
+      >
+        Dashboard
+      </button>
+      <button
+        onClick={() => {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+          window.location.reload(); // or router.push('/login') if preferred
+        }}
+        className="px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-md"
+      >
+        Logout
+      </button>
+    </>
+  ) : (
+    <>
+      <Link href="/login" className="px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+        Login
+      </Link>
+      <Link href="/register" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md shadow-sm">
+        Register
+      </Link>
+    </>
+  )}
+</div>
+
+
+
           </div>
           <div className="-mr-2 flex items-center md:hidden">
             <button
