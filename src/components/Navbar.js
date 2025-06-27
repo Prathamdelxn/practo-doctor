@@ -34,7 +34,7 @@ useEffect(() => {
     }
   }
 }, []);
-
+console.log("asdf",userData)
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -103,7 +103,7 @@ useEffect(() => {
   </button>
   <div className="border-l border-gray-300 h-6 mx-1"></div>
 
-  {userData ? (
+  {userData  && userData.role=="patient"? (
     <>
       <button
         onClick={() => {
