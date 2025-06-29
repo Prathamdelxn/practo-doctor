@@ -75,7 +75,7 @@ console.log("asdf",userData)
             </div>
           </div>
           <div className="hidden md:flex items-center">
-            <div className="relative mx-4">
+            {/* <div className="relative mx-4">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
@@ -84,7 +84,7 @@ console.log("asdf",userData)
                 placeholder="Search for doctors, clinics..."
                 type="search"
               />
-            </div>
+            </div> */}
             {/* <div className="flex items-center space-x-3">
               <button className="p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none">
                 <Bell className="h-6 w-6" />

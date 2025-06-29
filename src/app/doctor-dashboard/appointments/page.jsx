@@ -692,7 +692,7 @@ const DoctorAppointmentsDashboard = () => {
                          appointment.patientNote?.toLowerCase().includes(searchTerm.toLowerCase());
     
     let matchesTab = true;
-    if (activeTab === 'all') matchesTab = appointment.status === 'confirmed';
+    if (activeTab === 'all'){ matchesTab =["confirmed","pending"].includes(appointment.status)}
     else if (activeTab === 'checkedIn') matchesTab = appointment.status === 'checkedIn';
     else if (activeTab === 'cancelled') matchesTab = appointment.status === 'cancelled';
     
