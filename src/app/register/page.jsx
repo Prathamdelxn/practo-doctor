@@ -432,9 +432,22 @@ const steps = [
 };
 
 // Clinic form handlers
+// const handleClinicInputChange = (e) => {
+//   const { name, value } = e.target;
+//   setClinicFormData(prev => ({ ...prev, [name]: value }));
+// };
+
 const handleClinicInputChange = (e) => {
   const { name, value } = e.target;
-  setClinicFormData(prev => ({ ...prev, [name]: value }));
+  setClinicFormData(prev => ({ 
+    ...prev, 
+    [name]: value 
+  }));
+  
+  // Clear error when field is changed
+  if (clinicErrors[name]) {
+    setClinicErrors(prev => ({ ...prev, [name]: '' }));
+  }
 };
 
 const handleClinicSpecialtyChange = (e) => {
@@ -489,14 +502,80 @@ const clinicTypes = [
     { value: 'surgical', label: 'Surgical Center', icon: '🏥' },
     { value: 'diagnostic', label: 'Diagnostic Center', icon: '🔬' },
   ];
+// const validateClinicStep = (step) => {
+//     const newErrors = {};
+    
+//     if (!clinicFormData.clinicName.trim()) {
+//       newErrors.clinicName = 'Clinic name is required';
+//     }
+    
+//     if (!clinicFormData.address.trim()) {
+//       newErrors.address = 'Address is required';
+//     }
+    
+//     if (!clinicFormData.city.trim()) {
+//       newErrors.city = 'City is required';
+//     }
+    
+//     if (!clinicFormData.country.trim()) {
+//       newErrors.country = 'Country is required';
+//     }
+    
+//     if (!clinicFormData.phone.trim()) {
+//       newErrors.phone = 'Phone number is required';
+//     } else if (!/^[\d\s\+\-\(\)]{10,15}$/.test(clinicFormData.phone)) {
+//       newErrors.phone = 'Invalid phone number format';
+//     }
+    
+//     if (!clinicFormData.email.trim()) {
+//       newErrors.email = 'Email is required';
+//     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clinicFormData.email)) {
+//       newErrors.email = 'Invalid email format';
+//     }
+//     if (!clinicFormData.password.trim()) {
+//     newErrors.password = 'Password is required';
+//   } else if (clinicFormData.password.length < 8) {
+//     newErrors.password = 'Password must be at least 8 characters';
+//   } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(clinicFormData.password)) {
+//     newErrors.password = 'Password must contain uppercase, lowercase, number, and special character';
+//   }
+//     setClinicErrors(newErrors);
+//     return Object.keys(newErrors).length === 0;
+//   };
+
+// const nextClinicStep = () => {
+//   if (validateClinicStep(currentClinicStep)) {
+//     setCurrentClinicStep(prev => prev + 1);
+//   }
+// };
+
+// const prevClinicStep = () => {
+//   setCurrentClinicStep(prev => prev - 1);
+// };
+
+
 const validateClinicStep = (step) => {
   const newErrors = {};
-  // Add validation logic similar to your other forms
-  // ...
+  
+  if (step === 0) {
+    if (!clinicFormData.clinicName.trim()) newErrors.clinicName = 'Clinic name is required';
+    if (!clinicFormData.clinicType) newErrors.clinicType = 'Clinic type is required';
+  } 
+  else if (step === 1) {
+    if (!clinicFormData.address.trim()) newErrors.address = 'Address is required';
+    if (!clinicFormData.city.trim()) newErrors.city = 'City is required';
+    if (!clinicFormData.country.trim()) newErrors.country = 'Country is required';
+    if (!clinicFormData.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!clinicFormData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(clinicFormData.email)) newErrors.email = 'Invalid email format';
+    if (!clinicFormData.password) newErrors.password = 'Password is required';
+    else if (clinicFormData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+  }
+  // Add validation for other steps as needed
+  
   setClinicErrors(newErrors);
   return Object.keys(newErrors).length === 0;
 };
-
 const nextClinicStep = () => {
   if (validateClinicStep(currentClinicStep)) {
     setCurrentClinicStep(prev => prev + 1);
@@ -504,17 +583,92 @@ const nextClinicStep = () => {
 };
 
 const prevClinicStep = () => {
-  setCurrentClinicStep(prev => prev - 1);
+  setCurrentClinicStep(prev => Math.max(prev - 1, 0));
 };
+
+// const handleClinicSubmit = async (e) => {
+//   console.log(currentClinicStep);
+//   e.preventDefault();
+  
+//   if (!validateClinicStep(currentClinicStep)) {
+//     return;
+//   }
+// console.log("asf",clinicFormData);
+//   setIsClinicSubmitting(true);
+//   try {
+//     const response = await fetch('https://practo-backend.vercel.app/api/clinic/register', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(clinicFormData)
+//     });
+
+//     if (response.ok) {
+//       setClinicRegistrationSuccess(true);
+//       setTimeout(() => {
+//         setClinicFormData({
+//           clinicName: '',
+//           address: '',
+//           city: '',
+//           state: '',
+//           postalCode: '',
+//           country: '',
+//           phone: '',
+//           email: '',
+//           website: '',
+//           registrationNumber: '',
+//           password: '',
+//           taxId: '',
+//           clinicType: 'general',
+//           specialties: [],
+//           openingHours: {
+//             monday: { open: '09:00', close: '17:00' },
+//             tuesday: { open: '09:00', close: '17:00' },
+//             wednesday: { open: '09:00', close: '17:00' },
+//             thursday: { open: '09:00', close: '17:00' },
+//             friday: { open: '09:00', close: '17:00' },
+//             saturday: { open: '', close: '' },
+//             sunday: { open: '', close: '' },
+//           },
+//           description: '',
+//           logo: null,
+//         });
+//         setCurrentClinicStep(0);
+//         setIsClinicSubmitting(false);
+//         setShowClinicModal(false);
+//         setClinicRegistrationSuccess(false);
+//       }, 2000);
+//     } else {
+//       const error = await response.json();
+//       console.error('Clinic registration failed:', error);
+//       alert(`Registration failed: ${error.message || 'Server Error'}`);
+//       setIsClinicSubmitting(false);
+//     }
+//   } catch (err) {
+//     console.error('Error submitting clinic form:', err);
+//     alert('Network or server error occurred');
+//     setIsClinicSubmitting(false);
+//   }
+// };
+
 
 const handleClinicSubmit = async (e) => {
   e.preventDefault();
   
+  // Validate current step
   if (!validateClinicStep(currentClinicStep)) {
     return;
   }
 
+  // If not last step, proceed to next step
+  if (currentClinicStep < steps.length - 1) {
+    nextClinicStep();
+    return;
+  }
+
   setIsClinicSubmitting(true);
+  
   try {
     const response = await fetch('https://practo-backend.vercel.app/api/clinic/register', {
       method: 'POST',
@@ -524,54 +678,55 @@ const handleClinicSubmit = async (e) => {
       body: JSON.stringify(clinicFormData)
     });
 
-    if (response.ok) {
-      setClinicRegistrationSuccess(true);
-      setTimeout(() => {
-        setClinicFormData({
-          clinicName: '',
-          address: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          country: '',
-          phone: '',
-          email: '',
-          website: '',
-          registrationNumber: '',
-          password: '',
-          taxId: '',
-          clinicType: 'general',
-          specialties: [],
-          openingHours: {
-            monday: { open: '09:00', close: '17:00' },
-            tuesday: { open: '09:00', close: '17:00' },
-            wednesday: { open: '09:00', close: '17:00' },
-            thursday: { open: '09:00', close: '17:00' },
-            friday: { open: '09:00', close: '17:00' },
-            saturday: { open: '', close: '' },
-            sunday: { open: '', close: '' },
-          },
-          description: '',
-          logo: null,
-        });
-        setCurrentClinicStep(0);
-        setIsClinicSubmitting(false);
-        setShowClinicModal(false);
-        setClinicRegistrationSuccess(false);
-      }, 2000);
-    } else {
+    if (!response.ok) {
       const error = await response.json();
-      console.error('Clinic registration failed:', error);
-      alert(`Registration failed: ${error.message || 'Server Error'}`);
-      setIsClinicSubmitting(false);
+      throw new Error(error.message || 'Registration failed');
     }
+
+    const data = await response.json();
+    console.log('Registration successful:', data);
+    setClinicRegistrationSuccess(true);
+    
+    // Reset form after success
+    setTimeout(() => {
+      setClinicFormData({
+        clinicName: '',
+        address: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
+        phone: '',
+        email: '',
+        website: '',
+        registrationNumber: '',
+        password: '',
+        taxId: '',
+        clinicType: 'general',
+        specialties: [],
+        openingHours: {
+          monday: { open: '09:00', close: '17:00' },
+          tuesday: { open: '09:00', close: '17:00' },
+          wednesday: { open: '09:00', close: '17:00' },
+          thursday: { open: '09:00', close: '17:00' },
+          friday: { open: '09:00', close: '17:00' },
+          saturday: { open: '', close: '' },
+          sunday: { open: '', close: '' },
+        },
+        description: '',
+        logo: null,
+      });
+      setCurrentClinicStep(0);
+      setShowClinicModal(false);
+    }, 2000);
   } catch (err) {
     console.error('Error submitting clinic form:', err);
-    alert('Network or server error occurred');
+    alert(`Registration failed: ${err.message || 'Please try again'}`);
+  } finally {
     setIsClinicSubmitting(false);
   }
 };
- const medicalSpecialties = [
+const medicalSpecialties = [
     { name: 'Cardiology', icon: '❤️' },
     { name: 'Dermatology', icon: '🧴' },
     { name: 'Endocrinology', icon: '🧬' },
