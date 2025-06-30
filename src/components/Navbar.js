@@ -34,7 +34,7 @@ useEffect(() => {
     }
   }
 }, []);
-
+console.log("asdf",userData)
 
   return (
     <nav className="bg-white shadow-sm sticky top-0 z-50">
@@ -76,7 +76,7 @@ useEffect(() => {
             </div>
           </div>
           <div className="hidden md:flex items-center">
-            <div className="relative mx-4">
+            {/* <div className="relative mx-4">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-5 w-5 text-gray-400" />
               </div>
@@ -85,7 +85,7 @@ useEffect(() => {
                 placeholder="Search for doctors, clinics..."
                 type="search"
               />
-            </div>
+            </div> */}
             {/* <div className="flex items-center space-x-3">
               <button className="p-1 rounded-full text-gray-400 hover:text-gray-600 focus:outline-none">
                 <Bell className="h-6 w-6" />
@@ -104,7 +104,7 @@ useEffect(() => {
   </button>
   <div className="border-l border-gray-300 h-6 mx-1"></div>
 
-  {userData ? (
+  {userData  && userData.role=="patient"? (
     <>
       <button
         onClick={() => {

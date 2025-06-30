@@ -22,6 +22,7 @@ export default function AddDoctorPage() {
     licenseNumber: '',
     experience: '',
     consultantFee: '',
+    city:'',
     qualifications: [''],
     clinicId: '',
     hospital: '',
@@ -76,6 +77,7 @@ export default function AddDoctorPage() {
         hospitalAddress: `${data.clinic.address || ''}, ${data.clinic.city || ''}, ${data.clinic.state || ''}, ${data.clinic.country || ''} - ${data.clinic.postalCode || ''}`.replace(/^,\s*|,\s*$/g, ''),
         hospitalNumber: data.clinic.phone || '',
         licenseNumber: data.clinic.registrationNumber || "", 
+        city:data.clinic.city,
         clinicId: id
       }));
     } catch (err) {
@@ -230,6 +232,7 @@ export default function AddDoctorPage() {
         hospital: formData.hospital,
         hospitalAddress: formData.hospitalAddress,
         hospitalNumber: formData.hospitalNumber,
+        city:formData.city,
         homeAddress: '',
         availableDays: [],
         availableTime: "9:00 AM to 5:00 PM",
@@ -628,6 +631,21 @@ export default function AddDoctorPage() {
                     onChange={handleInputChange}
                     className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
                     placeholder="Hospital contact number"
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <Phone className="inline w-4 h-4 mr-2" />
+                    Hospital City
+                  </label>
+                  <input
+                    type="tel"
+                    name="hospitalCity"
+                    value={formData.city}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                    placeholder="Hospital City"
                     required
                   />
                 </div>
