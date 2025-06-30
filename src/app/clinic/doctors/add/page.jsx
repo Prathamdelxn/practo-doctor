@@ -1,11 +1,12 @@
 'use client'
 
-import { useState,useEffect,useRef } from 'react';
-import { User, Mail, Phone, Calendar, MapPin, Clock, Award, Stethoscope, Building,Upload , FileText, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { User, Mail, Phone, Calendar, MapPin, Clock, Award, Stethoscope, Building, Upload, Eye, EyeOff } from 'lucide-react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+
 export default function AddDoctorPage() {
-  const Router=useRouter();
+  const Router = useRouter();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -16,27 +17,41 @@ export default function AddDoctorPage() {
     password: '',
     phone: '',
     specialty: '',
-    homeAddress:'',
+    homeAddress: '',
     supSpeciality: '',
-    licenseNumber:'',
+    licenseNumber: '',
     experience: '',
     consultantFee: '',
     qualifications: [''],
- clinicId:'',
+    clinicId: '',
     hospital: '',
     hospitalAddress: '',
     hospitalNumber: '',
+    // Changed to match API expectations
     availableDays: [],
-    availableTime: ''
+    availableTime: "9:00 AM to 5:00 PM",
+    // Keep these for UI management
+    timeSlots: {
+      from: { hour: '9', minute: '00', period: 'AM' },
+      to: { hour: '5', minute: '00', period: 'PM' }
+    }
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
- const fileInputRef = useRef(null)
- const [errors, setErrors] = useState({})
-   const [isSubmitting, setIsSubmitting] = useState(false)
-   const [success, setSuccess] = useState(false)
-    const [imagePreview, setImagePreview] = useState('');
+  const fileInputRef = useRef(null);
+  const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [imagePreview, setImagePreview] = useState('');
+
+  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const specialties = [
+    'Cardiology', 'Dermatology', 'Endocrinology', 'Gastroenterology', 'Hematology',
+    'Neurology', 'Oncology', 'Orthopedics', 'Pediatrics', 'Psychiatry', 'Radiology',
+    'Surgery', 'Urology', 'Gynecology', 'Ophthalmology', 'ENT', 'Anesthesiology'
+  ];
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -44,38 +59,37 @@ export default function AddDoctorPage() {
       [name]: value
     }));
   };
-   const triggerFileInput = () => {
+
+  const triggerFileInput = () => {
     fileInputRef.current.click();
   };
-const fetchUserData = async (id) => {
+
+  const fetchUserData = async (id) => {
     try {
       const res = await fetch(`https://practo-backend.vercel.app/api/clinic/fetchProfileData/${id}`);
       if (!res.ok) throw new Error('Failed to fetch doctor info');
       const data = await res.json();
      
-      // console.log("afd",data.clinic);
-      // setFormData(...,hospi)
-       setFormData(prev => ({
-      ...prev,
-      hospital: data.clinic.clinicName || '',
-      hospitalAddress: `${data.clinic.address || ''}, ${data.clinic.city || ''}, ${data.clinic.state || ''}, ${data.clinic.country || ''} - ${data.clinic.postalCode || ''}`.replace(/^,\s*|,\s*$/g, ''), // Remove leading/trailing commas
-      hospitalNumber: data.clinic.phone || '',
-      licenseNumber:data.clinic.registrationNumber || "", 
-      clinicId:id
-    }));
+      setFormData(prev => ({
+        ...prev,
+        hospital: data.clinic.clinicName || '',
+        hospitalAddress: `${data.clinic.address || ''}, ${data.clinic.city || ''}, ${data.clinic.state || ''}, ${data.clinic.country || ''} - ${data.clinic.postalCode || ''}`.replace(/^,\s*|,\s*$/g, ''),
+        hospitalNumber: data.clinic.phone || '',
+        licenseNumber: data.clinic.registrationNumber || "", 
+        clinicId: id
+      }));
     } catch (err) {
       console.error(err);
-    } finally {
-     
     }
   };
 
-useEffect(()=>{
-  const user=localStorage.getItem('user')
-  const userdata=JSON.parse(user);
-  const id=userdata?.id
- fetchUserData(id);
-})
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    const userdata = JSON.parse(user);
+    const id = userdata?.id;
+    fetchUserData(id);
+  }, []);
+
   const handleQualificationChange = (index, value) => {
     const newQualifications = [...formData.qualifications];
     newQualifications[index] = value;
@@ -111,111 +125,137 @@ useEffect(()=>{
     }));
   };
 
- 
-const uploadImageToCloudinary = async (file) => {
-  try {
-    const formData = new FormData();
-    formData.append('file', file);
+  const uploadImageToCloudinary = async (file) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
 
-    const response = await fetch('/api/upload', {
-      method: 'POST',
-      body: formData,
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Upload failed');
+      }
+
+      const data = await response.json();
+      return data.url;
+    } catch (error) {
+      console.error('Upload error:', error);
+      throw error;
+    }
+  };
+
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      setIsSubmitting(true);
+      
+      // First create a local preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData(prev => ({ ...prev, profileImage: reader.result }));
+      };
+      reader.readAsDataURL(file);
+
+      // Then upload to Cloudinary
+      const cloudinaryUrl = await uploadImageToCloudinary(file);
+      setFormData(prev => ({ ...prev, profileImage: cloudinaryUrl }));
+      setImagePreview(cloudinaryUrl);
+    } catch (error) {
+      console.error('Error uploading image:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleTimeChange = (type, field, value) => {
+    setFormData(prev => {
+      const newTimeSlots = {
+        ...prev.timeSlots,
+        [type]: {
+          ...prev.timeSlots[type],
+          [field]: value
+        }
+      };
+      
+      // Create the time string to match API expectations
+      const timeString = `${newTimeSlots.from.hour}:${newTimeSlots.from.minute} ${newTimeSlots.from.period} to ${newTimeSlots.to.hour}:${newTimeSlots.to.minute} ${newTimeSlots.to.period}`;
+      
+      return {
+        ...prev,
+        availableTime: timeString,
+        timeSlots: newTimeSlots
+      };
     });
+  };
 
-    if (!response.ok) {
-      throw new Error('Upload failed');
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (currentStep !== 3) {
+      return;
     }
 
-    const data = await response.json();
-    return data.url;
-  } catch (error) {
-    console.error('Upload error:', error);
-    throw error;
-  }
-};
-const handleFileChange = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+    try {
+      // Prepare data for API - remove UI-only fields
+      const { timeSlots, ...apiData } = formData;
+      
+      console.log('Submitting data:', apiData);
+      
+      const response = await axios.post('https://practo-backend.vercel.app/api/clinic/doctor-add', apiData);
+      console.log('Success: Register');
+      alert("Doctor Added Successfully");
+      
+      // Reset form
+      setFormData({
+        firstName: '',
+        lastName: '',
+        profileImage: '',
+        dateOfBirth: '',
+        gender: '',
+        email: '',
+        password: '',
+        phone: '',
+        specialty: '',
+        supSpeciality: '',
+        licenseNumber: '',
+        experience: '',
+        consultantFee: '',
+        qualifications: [''],
+        clinicId: formData.clinicId,
+        hospital: formData.hospital,
+        hospitalAddress: formData.hospitalAddress,
+        hospitalNumber: formData.hospitalNumber,
+        homeAddress: '',
+        availableDays: [],
+        availableTime: "9:00 AM to 5:00 PM",
+        timeSlots: {
+          from: { hour: '9', minute: '00', period: 'AM' },
+          to: { hour: '5', minute: '00', period: 'PM' }
+        }
+      });
+      setCurrentStep(1);
+      
+      Router.refresh();
+      Router.push("/clinic/doctors");
+    } catch (err) {
+      console.log('Error:', err.response?.data?.message || 'Registration failed');
+      alert(err.response?.data?.message || 'Registration failed');
+    }
+  };
 
-  try {
-    setIsSubmitting(true);
-    
-    // First create a local preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, profileImage: reader.result }));
-    };
-    reader.readAsDataURL(file);
-
-    // Then upload to Cloudinary
-    const cloudinaryUrl = await uploadImageToCloudinary(file);
-    setFormData(prev => ({ ...prev, profileImage: cloudinaryUrl }));
-   setImagePreview(cloudinaryUrl)
-  } catch (error) {
-    console.error('Error uploading image:', error);
-    // Handle error (show toast, etc.)
-  } finally {
-    setIsSubmitting(false);
-  }
-};
-const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (currentStep !== 3) {
-    return;
-  }
-
-  try {
-    const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', formData);
-    console.log('Success: Register');
-    alert("Doctor Added Successfully");
-    
-    // Reset form and step
-    setFormData({
-      firstName: '',
-      lastName: '',
-      profileImage: '',
-      dateOfBirth: '',
-      gender: '',
-      email: '',
-      password: '',
-      phone: '',
-      specialty: '',
-      supSpeciality: '',
-      licenseNumber: '',
-      experience: '',
-      consultantFee: '',
-      qualifications: [''],
-      clinicId: formData.clinicId, // Keep clinicId if needed
-      hospital: formData.hospital, // Keep hospital info if needed
-      hospitalAddress: formData.hospitalAddress,
-      hospitalNumber: formData.hospitalNumber,
-      availableDays: [],
-      availableTime: ''
-    });
-    setCurrentStep(1);
-    
-    Router.refresh();
-    Router.push("/clinic/doctors")
-  } catch (err) {
-    console.log(err.response?.data?.message || 'Registration failed');
-  }
-};
- const nextStep = (e) => {
-  e.preventDefault(); // Prevent form submission
-  if (currentStep < 3) setCurrentStep(currentStep + 1);
-};
+  const nextStep = (e) => {
+    e.preventDefault();
+    if (currentStep < 3) setCurrentStep(currentStep + 1);
+  };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
-
-  const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  const specialties = [
-    'Cardiology', 'Dermatology', 'Endocrinology', 'Gastroenterology', 'Hematology',
-    'Neurology', 'Oncology', 'Orthopedics', 'Pediatrics', 'Psychiatry', 'Radiology',
-    'Surgery', 'Urology', 'Gynecology', 'Ophthalmology', 'ENT', 'Anesthesiology'
-  ];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 p-6">
@@ -290,7 +330,7 @@ const handleSubmit = async (e) => {
                   </div>
                 </div>
 
-                 <div className="space-y-2">
+                <div className="space-y-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
                     <Upload className="inline w-4 h-4 mr-2" />
                     Profile Image
@@ -416,20 +456,21 @@ const handleSubmit = async (e) => {
                     </button>
                   </div>
                 </div>
-                 <div className="space-y-2">
-      <label className="block text-sm font-semibold text-gray-700 mb-2">
-        <MapPin className="inline w-4 h-4 mr-2" />
-        Home Address
-      </label>
-      <textarea
-        name="homeAddress"
-        value={formData.homeAddress}
-        onChange={handleInputChange}
-        className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
-        placeholder="Enter your home address"
-        rows="3"
-      />
-    </div>
+                
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <MapPin className="inline w-4 h-4 mr-2" />
+                    Home Address
+                  </label>
+                  <textarea
+                    name="homeAddress"
+                    value={formData.homeAddress}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                    placeholder="Enter your home address"
+                    rows="3"
+                  />
+                </div>
               </div>
             )}
 
@@ -504,21 +545,6 @@ const handleSubmit = async (e) => {
                     />
                   </div>
                 </div>
-
-                {/* <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    License Number
-                  </label>
-                  <input
-                    type="text"
-                    name="licenseNumber"
-                    value={formData.licenseNumber}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
-                    placeholder="Medical license number"
-                    required
-                  />
-                </div> */}
 
                 <div className="space-y-4">
                   <label className="block text-sm font-semibold text-gray-700">
@@ -629,56 +655,162 @@ const handleSubmit = async (e) => {
                   </div>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    <Clock className="inline w-4 h-4 mr-2" />
                     Available Time
                   </label>
-                  <input
-                    type="text"
-                    name="availableTime"
-                    value={formData.availableTime}
-                    onChange={handleInputChange}
-                    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
-                    placeholder="e.g., 9:00 AM - 5:00 PM"
-                  />
+                  
+                  <div className="grid md:grid-cols-2 gap-6">
+                    {/* From Time */}
+                    <div className="space-y-2">
+                      <label className="block text-sm text-gray-600 mb-1">From</label>
+                      <div className="flex gap-2">
+                        {/* Hour */}
+                        <select
+                          value={formData.timeSlots.from.hour}
+                          onChange={(e) => handleTimeChange('from', 'hour', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                        >
+                          {Array.from({length: 12}, (_, i) => i + 1).map(hour => (
+                            <option key={`from-hour-${hour}`} value={hour}>{hour}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Minute */}
+                        <select
+                          value={formData.timeSlots.from.minute}
+                          onChange={(e) => handleTimeChange('from', 'minute', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                        >
+                          <option value="00">00</option>
+                          <option value="15">15</option>
+                          <option value="30">30</option>
+                          <option value="45">45</option>
+                        </select>
+                        
+                        {/* AM/PM */}
+                        <select
+                          value={formData.timeSlots.from.period}
+                          onChange={(e) => handleTimeChange('from', 'period', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    {/* To Time */}
+                    <div className="space-y-2">
+                      <label className="block text-sm text-gray-600 mb-1">To</label>
+                      <div className="flex gap-2">
+                        {/* Hour */}
+                        <select
+                          value={formData.timeSlots.to.hour}
+                          onChange={(e) => handleTimeChange('to', 'hour', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                        >
+                         {Array.from({length: 12}, (_, i) => i + 1).map(hour => (
+                            <option key={`to-hour-${hour}`} value={hour}>{hour}</option>
+                          ))}
+                        </select>
+                        
+                        {/* Minute */}
+                        <select
+                          value={formData.timeSlots.to.minute}
+                          onChange={(e) => handleTimeChange('to', 'minute', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                        >
+                          <option value="00">00</option>
+                          <option value="15">15</option>
+                          <option value="30">30</option>
+                          <option value="45">45</option>
+                        </select>
+                        
+                        {/* AM/PM */}
+                        <select
+                          value={formData.timeSlots.to.period}
+                          onChange={(e) => handleTimeChange('to', 'period', e.target.value)}
+                          className="flex-1 px-3 py-2 rounded-lg border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+                        >
+                          <option value="AM">AM</option>
+                          <option value="PM">PM</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Display formatted time */}
+                  <div className="mt-2 p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm text-gray-600">
+                      <strong>Selected Time:</strong> {formData.availableTime}
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex justify-between pt-6">
+            <div className="flex justify-between pt-6 border-t border-gray-200">
               <button
                 type="button"
                 onClick={prevStep}
                 className={`px-6 py-3 rounded-xl font-medium transition-all ${
-                  currentStep === 1
-                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  currentStep === 1 
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
                     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                 }`}
                 disabled={currentStep === 1}
               >
                 Previous
               </button>
-              
-           {currentStep < 3 ? (
-  <button
-    type="button"
-    onClick={nextStep}
-    className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
-  >
-    Next Step
-  </button>
-) : (
-  <button
-    type="submit"
-    className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl font-medium hover:from-green-700 hover:to-emerald-700 transition-all shadow-lg hover:shadow-xl"
-  >
-    Add Doctor
-  </button>
-)}
+
+              {currentStep < 3 ? (
+                <button
+                  type="button"
+                  onClick={nextStep}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-medium hover:from-purple-700 hover:to-blue-700 transition-all shadow-lg hover:shadow-xl"
+                >
+                  Next Step
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className={`px-6 py-3 rounded-xl font-medium transition-all shadow-lg hover:shadow-xl ${
+                    isSubmitting
+                      ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700'
+                  }`}
+                >
+                  {isSubmitting ? 'Adding Doctor...' : 'Add Doctor'}
+                </button>
+              )}
             </div>
           </div>
         </form>
+
+        {/* Success Message */}
+        {success && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Doctor Added Successfully!</h3>
+              <p className="text-gray-600 mb-6">The new doctor has been registered in the system.</p>
+              <button
+                onClick={() => setSuccess(false)}
+                className="px-6 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

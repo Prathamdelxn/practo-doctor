@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { FiCalendar, FiPlus, FiX, FiClock, FiUser, FiMapPin, FiPhone, FiMail, FiInfo } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
+import { FiCalendar, FiPlus, FiX, FiClock, FiUser, FiMapPin, FiPhone, FiMail, FiInfo,FiAlertCircle } from 'react-icons/fi';
 import Card from '@/components/Card';
 import Button from '@/components/Button';
 
@@ -19,8 +19,8 @@ export default function AppointmentsPage() {
     notes: ''
   });
   const [formErrors, setFormErrors] = useState({});
-  
-  const appointments = [
+  const [userId,setId]=useState("");
+  const [appointments,setAppointment]=useState([
     { 
       id: 1, 
       doctor: 'Dr. Sarah Johnson', 
@@ -65,7 +65,99 @@ export default function AppointmentsPage() {
       phone: '(555) 789-0123',
       notes: 'Follow-up for knee surgery recovery'
     },
-  ];
+  ])
+useEffect(() => {
+      const token = localStorage.getItem('token')
+      const userStr = localStorage.getItem('user')
+      const user=JSON.parse(userStr);
+      console.log("userDAta",user)
+      setId(user?.id)
+      
+},[])
+  useEffect(()=>{
+    const fetchAppointments=async()=>{
+      try{
+        if (!userId) return; 
+        const res=await fetch(`https://practo-backend.vercel.app/api/appointment/fetch-by-patient/${userId}`)
+        const data= await res.json();
+        console.log("response is",data.data)
+        setAppointment(data.data)
+
+      }catch(err){
+        console.log("Internal Server Error",err)
+
+      }
+    }
+    fetchAppointments();
+
+  },[userId])
+
+
+
+
+  //  useEffect(()=>{
+  //   const fetchDoctor=async()=>{
+  //     try{
+  //       if (!appointments?.doctorId) return; 
+  //       const res=await fetch(`http://localhost:3001/api/doctor/fetch-by-id/${appointments?.doctorId}`)
+  //       const data= await res.json();
+  //       console.log("response  docis",data.data)
+       
+
+  //     }catch(err){
+  //       console.log("Internal Server Error",err)
+
+  //     }
+  //   }
+  //   fetchDoctor();
+
+  // },[appointments])
+  // const appointments = [
+  //   { 
+  //     id: 1, 
+  //     doctor: 'Dr. Sarah Johnson', 
+  //     specialty: 'Cardiology', 
+  //     date: '2023-06-15', 
+  //     time: '10:30 AM', 
+  //     status: 'confirmed',
+  //     location: 'Cardio Center, Room 302',
+  //     phone: '(555) 123-4567',
+  //     email: 's.johnson@medicalcenter.com',
+  //     notes: 'Please bring your recent test results and arrive 15 minutes early for paperwork.'
+  //   },
+  //   { 
+  //     id: 2, 
+  //     doctor: 'Dr. Michael Chen', 
+  //     specialty: 'Dermatology', 
+  //     date: '2023-06-20', 
+  //     time: '2:15 PM', 
+  //     status: 'pending',
+  //     location: 'Dermatology Clinic, Suite 105',
+  //     phone: '(555) 987-6543',
+  //     email: 'm.chen@dermclinic.org'
+  //   },
+  //   { 
+  //     id: 3, 
+  //     doctor: 'Dr. Emily Wilson', 
+  //     specialty: 'Pediatrics', 
+  //     date: '2023-05-28', 
+  //     time: '9:00 AM', 
+  //     status: 'completed',
+  //     location: "Children's Hospital, Wing B",
+  //     phone: '(555) 456-7890'
+  //   },
+  //   { 
+  //     id: 4, 
+  //     doctor: 'Dr. Robert Garcia', 
+  //     specialty: 'Orthopedics', 
+  //     date: '2023-05-15', 
+  //     time: '11:45 AM', 
+  //     status: 'completed',
+  //     location: 'Orthopedic Center, Floor 3',
+  //     phone: '(555) 789-0123',
+  //     notes: 'Follow-up for knee surgery recovery'
+  //   },
+  // ];
 
   const openModal = (appointment) => {
     setSelectedAppointment(appointment);
@@ -158,13 +250,13 @@ export default function AppointmentsPage() {
           <h1 className="text-3xl font-bold text-blue-800">My Appointments</h1>
           <p className="text-blue-600 mt-1">Manage your upcoming medical visits</p>
         </div>
-        <Button 
+        {/* <Button 
           icon={<FiPlus className="text-white" />} 
           className="bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all"
           onClick={() => setShowNewAppointmentModal(true)}
         >
           New Appointment
-        </Button>
+        </Button> */}
       </div>
 
       {/* Appointments Table */}
@@ -191,28 +283,28 @@ export default function AppointmentsPage() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-blue-50">
-              {appointments.map((appointment) => (
-                <tr key={appointment.id} className="hover:bg-blue-50 transition-colors">
+              {appointments.map((appointment,index) => (
+                <tr key={index} className="hover:bg-blue-50 transition-colors">
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                         <FiUser className="text-blue-600" />
                       </div>
                       <div className="ml-4">
-                        <div className="text-sm font-medium text-blue-900">{appointment.doctor}</div>
-                        <div className="text-xs text-blue-500">{appointment.specialty}</div>
+                        <div className="text-sm font-medium text-blue-900">Dr. {appointment.doctorName}</div>
+                        <div className="text-xs text-blue-500">{appointment.doctorDetails?.specialty}</div>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
-                    <div className="text-sm text-blue-700 font-medium">{appointment.specialty}</div>
+                    <div className="text-sm text-blue-700 font-medium">{appointment.doctorDetails?.specialty}</div>
                   </td>
                   <td className="px-6 py-5 whitespace-nowrap">
                     <div className="flex items-center">
                       <FiClock className="mr-2 text-blue-400" />
                       <div>
                         <div className="text-sm font-medium text-blue-900">
-                          {new Date(appointment.date).toLocaleDateString('en-US', { 
+                          {new Date(appointment.appointmentDate).toLocaleDateString('en-US', { 
                             weekday: 'short', 
                             year: 'numeric', 
                             month: 'short', 
@@ -250,114 +342,200 @@ export default function AppointmentsPage() {
         </div>
       </Card>
 
-      {/* View Appointment Modal */}
-      {selectedAppointment && (
-        <>
-          <div className="fixed inset-0 bg-black/40 bg-opacity-30 backdrop-blur-sm z-40"></div>
+    {/* View Appointment Modal - Only show for checkedIn or completed status */}
+{selectedAppointment && (selectedAppointment.status === 'checkedIn' || selectedAppointment.status === 'completed') && (
+  <>
+    {/* Enhanced backdrop with better blur and animation */}
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-md z-40 animate-in fade-in duration-300"></div>
+    
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in zoom-in-95 duration-300">
+      <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 w-full max-w-2xl max-h-[90vh] overflow-hidden transform transition-all">
+        
+        {/* Enhanced header with gradient and glass effect */}
+        <div className={`relative px-8 py-6 ${
+          selectedAppointment.status === 'completed' 
+            ? 'bg-gradient-to-br from-emerald-500 via-green-500 to-teal-500' 
+            : 'bg-gradient-to-br from-blue-500 via-indigo-500 to-purple-500'
+        }`}>
+          {/* Glass effect overlay */}
+          <div className="absolute inset-0 bg-white/10 backdrop-blur-sm"></div>
           
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-              <div className="bg-gradient-to-r from-blue-600 to-blue-500 px-6 py-4 rounded-t-xl flex justify-between items-center">
-                <h2 className="text-xl font-semibold text-white">Appointment Details</h2>
-                <button 
-                  onClick={closeModal}
-                  className="text-white hover:text-blue-100 transition-colors"
-                >
-                  <FiX className="h-6 w-6" />
-                </button>
-              </div>
-
-              <div className="p-6 space-y-6">
-                <div className="flex items-start space-x-4">
-                  <div className="flex-shrink-0 h-14 w-14 rounded-full bg-blue-100 flex items-center justify-center">
-                    <FiUser className="text-blue-600 text-xl" />
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-gray-900">{selectedAppointment.doctor}</h3>
-                    <p className="text-blue-600">{selectedAppointment.specialty}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex items-start space-x-3">
-                    <FiCalendar className="flex-shrink-0 text-blue-500 mt-1" />
-                    <div>
-                      <p className="text-sm text-gray-500">Date</p>
-                      <p className="font-medium text-gray-900">
-                        {new Date(selectedAppointment.date).toLocaleDateString('en-US', { 
-                          weekday: 'long', 
-                          year: 'numeric', 
-                          month: 'long', 
-                          day: 'numeric' 
-                        })}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <FiClock className="flex-shrink-0 text-blue-500 mt-1" />
-                    <div>
-                      <p className="text-sm text-gray-500">Time</p>
-                      <p className="font-medium text-gray-900">{selectedAppointment.time}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <FiMapPin className="flex-shrink-0 text-blue-500 mt-1" />
-                    <div>
-                      <p className="text-sm text-gray-500">Location</p>
-                      <p className="font-medium text-gray-900">
-                        {selectedAppointment.location || 'Not specified'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start space-x-3">
-                    <FiPhone className="flex-shrink-0 text-blue-500 mt-1" />
-                    <div>
-                      <p className="text-sm text-gray-500">Phone</p>
-                      <p className="font-medium text-gray-900">
-                        {selectedAppointment.phone || 'Not specified'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {selectedAppointment.email && (
-                  <div className="flex items-start space-x-3">
-                    <FiMail className="flex-shrink-0 text-blue-500 mt-1" />
-                    <div>
-                      <p className="text-sm text-gray-500">Email</p>
-                      <p className="font-medium text-gray-900">{selectedAppointment.email}</p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedAppointment.notes && (
-                  <div className="space-y-2">
-                    <div className="flex items-center space-x-2 text-blue-600">
-                      <FiInfo />
-                      <p className="text-sm font-medium">Additional Notes</p>
-                    </div>
-                    <div className="bg-blue-50 p-4 rounded-lg">
-                      <p className="text-gray-700">{selectedAppointment.notes}</p>
-                    </div>
-                  </div>
+          <div className="relative flex justify-between items-center">
+            <div className="flex items-center space-x-4">
+              <div className={`p-3 rounded-full ${
+                selectedAppointment.status === 'completed' 
+                  ? 'bg-white/20 border border-white/30' 
+                  : 'bg-white/20 border border-white/30'
+              }`}>
+                {selectedAppointment.status === 'completed' ? (
+                  <FiCheckCircle className="text-white text-2xl" />
+                ) : (
+                  <FiAlertCircle className="text-white text-2xl" />
                 )}
               </div>
+              <div>
+                <h2 className="text-2xl font-bold text-white">Appointment Details</h2>
+                <p className="text-white/80 text-sm font-medium">
+                  {selectedAppointment.status === 'completed' ? 'Completed Appointment' : 'Active Appointment'}
+                </p>
+              </div>
+            </div>
+            <button 
+              onClick={closeModal}
+              className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-all duration-200 border border-white/30 backdrop-blur-sm"
+            >
+              <FiX className="h-6 w-6 text-white" />
+            </button>
+          </div>
+        </div>
 
-              <div className="bg-gray-50 px-6 py-4 rounded-b-xl flex justify-end">
-                <button
-                  onClick={closeModal}
-                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  Close
-                </button>
+        {/* Enhanced content area */}
+        <div className="p-8 space-y-8 overflow-y-auto max-h-[calc(90vh-200px)]">
+          
+          {/* Doctor info card with modern design */}
+          <div className="bg-gradient-to-br from-gray-50 to-blue-50 rounded-2xl p-6 border border-gray-100">
+            <div className="flex items-start space-x-6">
+              <div className="relative">
+                <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                  <FiUser className="text-white text-2xl" />
+                </div>
+                <div className={`absolute -bottom-2 -right-2 h-6 w-6 rounded-full flex items-center justify-center shadow-md ${
+                  selectedAppointment.status === 'completed' 
+                    ? 'bg-emerald-500' 
+                    : 'bg-blue-500'
+                }`}>
+                  {selectedAppointment.status === 'completed' ? (
+                    <FiCheckCircle className="text-white text-sm" />
+                  ) : (
+                    <FiClock className="text-white text-sm" />
+                  )}
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bold text-gray-900 mb-1">{selectedAppointment.doctor}</h3>
+                <p className="text-blue-600 font-semibold text-lg mb-3">{selectedAppointment.specialty}</p>
+                <span className={`px-4 py-2 inline-flex text-sm font-semibold rounded-full shadow-sm ${
+                  selectedAppointment.status === 'completed' 
+                    ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' 
+                    : 'bg-blue-100 text-blue-800 border border-blue-200'
+                }`}>
+                  ✓ {selectedAppointment.status.charAt(0).toUpperCase() + selectedAppointment.status.slice(1)}
+                </span>
               </div>
             </div>
           </div>
-        </>
-      )}
+
+          {/* Enhanced info grid with cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 rounded-xl bg-blue-100">
+                  <FiCalendar className="text-blue-600 text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Date</p>
+                  <p className="font-bold text-gray-900 text-lg">
+                    {new Date(selectedAppointment.date).toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 rounded-xl bg-indigo-100">
+                  <FiClock className="text-indigo-600 text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Time</p>
+                  <p className="font-bold text-gray-900 text-lg">{selectedAppointment.time}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 rounded-xl bg-purple-100">
+                  <FiMapPin className="text-purple-600 text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Location</p>
+                  <p className="font-bold text-gray-900 text-lg">
+                    {selectedAppointment.location || 'Not specified'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 rounded-xl bg-emerald-100">
+                  <FiPhone className="text-emerald-600 text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Phone</p>
+                  <p className="font-bold text-gray-900 text-lg">
+                    {selectedAppointment.phone || 'Not specified'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Enhanced email section */}
+          {selectedAppointment.email && (
+            <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start space-x-4">
+                <div className="p-3 rounded-xl bg-rose-100">
+                  <FiMail className="text-rose-600 text-xl" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</p>
+                  <p className="font-bold text-gray-900 text-lg">{selectedAppointment.email}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Enhanced notes section */}
+          {selectedAppointment.notes && (
+            <div className="space-y-4">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 rounded-lg bg-amber-100">
+                  <FiInfo className="text-amber-600 text-lg" />
+                </div>
+                <h4 className="text-lg font-bold text-gray-900">Additional Notes</h4>
+              </div>
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 p-6 rounded-2xl border border-amber-200 shadow-sm">
+                <p className="text-gray-800 leading-relaxed text-base">{selectedAppointment.notes}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Enhanced footer with modern button */}
+        <div className="bg-gradient-to-r from-gray-50 to-blue-50 px-8 py-6 border-t border-gray-200">
+          <div className="flex justify-end">
+            <button
+              onClick={closeModal}
+              className="group relative px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl border border-blue-500"
+            >
+              <span className="flex items-center space-x-2">
+                <span>Close</span>
+                <FiX className="text-sm group-hover:rotate-90 transition-transform duration-200" />
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </>
+)}
 
       {/* New Appointment Modal */}
       {showNewAppointmentModal && (
