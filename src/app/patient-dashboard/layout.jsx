@@ -476,52 +476,6 @@ export default function DashboardLayout({ children }) {
  
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-<<<<<<< HEAD
-{/* Top navigation */}
-<header className="bg-white shadow-sm z-10">
-  <div className="flex items-center justify-between px-6 py-4">
-    <button 
-      className="lg:hidden text-gray-500 hover:text-gray-700"
-      onClick={() => setSidebarOpen(true)}
-    >
-      <FiMenu size={24} />
-    </button>
-
-    <div className="flex items-center space-x-4">
-      {/* Notification and user profile remain unchanged */}
-      <div className="relative">
-        <button className="text-gray-500 hover:text-gray-700">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-        </button>
-      </div>
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-          <FiUser className="text-blue-600" />
-        </div>
-        <span className="font-medium">John Doe</span>
-      </div>
-    </div>
-    
-    {/* Modern Find Doctors button */}
-    <Link
-      href="/doctors"
-      className="relative inline-flex items-center justify-center px-4 py-2 overflow-hidden font-medium text-white transition-all duration-300 ease-out rounded-full group"
-    >
-      <span className="absolute inset-0 w-full h-full bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700"></span>
-      <span className="absolute bottom-0 right-0 block w-44 h-44 mb-32 mr-4 transition-all duration-500 origin-bottom-left transform rotate-45 translate-x-24 bg-blue-800 opacity-30 group-hover:rotate-90 ease"></span>
-      <span className="relative flex items-center text-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-        </svg>
-        Book Appointment
-      </span>
-    </Link>
-  </div>
-</header>
-=======
         {/* Top navigation */}
         <header className="relative bg-white/70 backdrop-blur-xl shadow-sm border-b border-white/20 z-30">
           <div className="absolute inset-0 bg-gradient-to-r from-white/50 to-blue-50/30"></div>
@@ -576,7 +530,6 @@ export default function DashboardLayout({ children }) {
           </div>
         </header>
         
->>>>>>> 977276913fb9109f7ab5ceab5ee428287a4c089a
         {/* Main content area */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">

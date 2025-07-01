@@ -72,6 +72,12 @@ export default function ClinicRegistrationForm() {
     { title: 'Hours', icon: '🕐' },
   ];
 
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -234,6 +240,7 @@ export default function ClinicRegistrationForm() {
                   name="clinicName"
                   value={formData.clinicName}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.clinicName ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Enter clinic name"
                 />
@@ -268,6 +275,7 @@ export default function ClinicRegistrationForm() {
                 rows={3}
                 value={formData.description}
                 onChange={handleChange}
+                onKeyDown={handleKeyDown}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                 placeholder="Tell us about your clinic's mission and services..."
               />
@@ -281,7 +289,6 @@ export default function ClinicRegistrationForm() {
                 <div className="inline-block h-14 w-14 rounded-full overflow-hidden bg-gray-100">
                   {formData.logo ? (
                     <img src="/pateint-login.png" alt="Doctor" width={500}/>
-
                   ) : (
                     <div className="h-full w-full flex items-center justify-center text-xl text-gray-400">
                       🏥
@@ -323,6 +330,7 @@ export default function ClinicRegistrationForm() {
                   name="address"
                   value={formData.address}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.address ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Street address"
                 />
@@ -339,6 +347,7 @@ export default function ClinicRegistrationForm() {
                   name="city"
                   value={formData.city}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.city ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="City"
                 />
@@ -355,6 +364,7 @@ export default function ClinicRegistrationForm() {
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="State or province"
                 />
@@ -370,6 +380,7 @@ export default function ClinicRegistrationForm() {
                   name="postalCode"
                   value={formData.postalCode}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Postal code"
                 />
@@ -385,6 +396,7 @@ export default function ClinicRegistrationForm() {
                   name="country"
                   value={formData.country}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.country ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="Country"
                 />
@@ -401,6 +413,7 @@ export default function ClinicRegistrationForm() {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.phone ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="+1 (555) 123-4567"
                 />
@@ -417,6 +430,7 @@ export default function ClinicRegistrationForm() {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
                   placeholder="contact@clinic.com"
                 />
@@ -433,6 +447,7 @@ export default function ClinicRegistrationForm() {
                   name="website"
                   value={formData.website}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="https://yourclinic.com"
                 />
@@ -449,6 +464,7 @@ export default function ClinicRegistrationForm() {
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
+                    onKeyDown={handleKeyDown}
                     className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 ${
                       errors.password ? 'border-red-500' : 'border-gray-300'
                     }`}
@@ -511,6 +527,7 @@ export default function ClinicRegistrationForm() {
                   name="registrationNumber"
                   value={formData.registrationNumber}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Registration number"
                 />
@@ -526,6 +543,7 @@ export default function ClinicRegistrationForm() {
                   name="taxId"
                   value={formData.taxId}
                   onChange={handleChange}
+                  onKeyDown={handleKeyDown}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   placeholder="Tax identification number"
                 />
@@ -566,7 +584,8 @@ export default function ClinicRegistrationForm() {
             </div>
           </div>
         );
-case 4: // Opening Hours
+
+      case 4: // Opening Hours
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -589,6 +608,7 @@ case 4: // Opening Hours
                       type="time"
                       value={hours.open}
                       onChange={(e) => handleOpeningHoursChange(day, 'open', e.target.value)}
+                      onKeyDown={handleKeyDown}
                       disabled={!hours.open && !hours.close}
                       className="flex-1 px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm disabled:bg-gray-100 disabled:text-gray-400"
                     />
@@ -597,6 +617,7 @@ case 4: // Opening Hours
                       type="time"
                       value={hours.close}
                       onChange={(e) => handleOpeningHoursChange(day, 'close', e.target.value)}
+                      onKeyDown={handleKeyDown}
                       disabled={!hours.open && !hours.close}
                       className="flex-1 px-2 py-1.5 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-sm disabled:bg-gray-100 disabled:text-gray-400"
                     />

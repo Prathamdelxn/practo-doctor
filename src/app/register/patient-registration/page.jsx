@@ -5,17 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiUser, FiMail, FiPhone, FiLock, FiCalendar } from 'react-icons/fi';
 import { FaHeartbeat, FaUserInjured, FaClinicMedical } from 'react-icons/fa';
 
- import doctorAnimation from '../../../../public/pateint-login.png'; // Replace with your Lottie file
-
 export default function PatientRegistration() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     phone: '',
-    dob: '',
+    dob: '', // This will store the date in YYYY-MM-DD format
     gender: '',
-    bloodType :'',
+    bloodType: '',
     password: '',
     confirmPassword: ''
   });
@@ -27,56 +25,69 @@ export default function PatientRegistration() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Update your handleSubmit function to better handle errors
 const handleSubmit = async (e) => {
   e.preventDefault();
 
   if (currentStep === 3) {
     try {
-      const response = await fetch('https://practo-backend.vercel.app/api/patients/register', {
+      // Validate passwords match
+      if (formData.password !== formData.confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+
+      // Prepare the data for submission
+      const submissionData = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        dateOfBirth: new Date(formData.dob), // Convert to Date object
+        gender: formData.gender,
+        bloodType: formData.bloodType,
+        password: formData.password
+      };
+
+      console.log('Submitting data:', submissionData);
+
+      const response = await fetch('https://localhost:3001/api/patients/register', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify(submissionData)
       });
 
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Registration successful:', result);
-        alert('Registration successful!');
-        // Optional: reset form or redirect
-        setFormData({
-          firstName: '',
-          lastName: '',
-          email: '',
-          phone: '',
-          dob: '',
-          gender: '',
-          bloodType: '',
-          password: '',
-          confirmPassword: ''
-        });
-        setCurrentStep(1);
-      } else {
-        const error = await response.json();
-        console.error('Registration failed:', error);
-        alert(`Registration failed: ${error.message || 'Server Error'}`);
+      const result = await response.json();
+      console.log('Response:', result);
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Registration failed');
       }
+
+      alert('Registration successful!');
+      // Reset form and state
+      setFormData({
+        firstName: '',
+        lastName: '',
+        email: '',
+        phone: '',
+        dob: '',
+        gender: '',
+        bloodType: '',
+        password: '',
+        confirmPassword: ''
+      });
+      setCurrentStep(1);
+      
     } catch (err) {
-      console.error('Error submitting form:', err);
-      alert('Network or server error occurred');
+      console.error('Registration error:', err);
+      alert(`Error: ${err.message}`);
     }
   }
 };
-
-
-// const handleSubmit = (e) => {
-//   e.preventDefault(); // Prevent page reload
-//    if (currentStep === 3) {
-//     console.log("Submitted Form Data:", formData);
-//     // You can send it to an API here too
-//   }
-// };
 
   const nextStep = () => setCurrentStep(prev => prev + 1);
   const prevStep = () => setCurrentStep(prev => prev - 1);
@@ -92,13 +103,7 @@ const handleSubmit = async (e) => {
           className="hidden lg:flex flex-col justify-center items-center"
         >
           <div className="relative w-full h-96">
-            {/* <Lottie 
-              animationData={doctorAnimation} 
-              loop={true} 
-              className="absolute inset-0"
-            /> */}
            <img src="/pateint-login.png" alt="Doctor" width={500}/>
-
             
             {/* Floating medical icons */}
             <motion.div
@@ -279,8 +284,15 @@ const handleSubmit = async (e) => {
                       onChange={handleChange}
                       className="pl-10 w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 py-3"
                       required
+                      max={new Date().toISOString().split('T')[0]} // Prevent future dates
                     />
                   </div>
+                  {/* Debug display to see what's being stored */}
+                  {formData.dob && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Selected: {formData.dob}
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -290,6 +302,7 @@ const handleSubmit = async (e) => {
                     value={formData.gender}
                     onChange={handleChange}
                     className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 py-3"
+                    required
                   >
                     <option value="">Select gender</option>
                     <option value="male">Male</option>
@@ -304,7 +317,7 @@ const handleSubmit = async (e) => {
                     <select
                       name="bloodType"
                       value={formData.bloodType || ''}
-                       onChange={handleChange}
+                      onChange={handleChange}
                       className="w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 py-3"
                     >
                       <option value="">Select blood type</option>
@@ -318,12 +331,11 @@ const handleSubmit = async (e) => {
                       <option value="O-">O-</option>
                     </select>
                   </div>
-
-                  
                 </div>
 
                 <div className="flex justify-between">
                   <motion.button
+                    type="button"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={prevStep}
@@ -366,6 +378,7 @@ const handleSubmit = async (e) => {
                       className="pl-10 w-full rounded-lg border-gray-200 focus:border-blue-500 focus:ring-blue-500 py-3"
                       placeholder="••••••••"
                       required
+                      minLength="6"
                     />
                   </div>
                 </div>
@@ -385,6 +398,22 @@ const handleSubmit = async (e) => {
                       placeholder="••••••••"
                       required
                     />
+                  </div>
+                  {formData.password && formData.confirmPassword && formData.password !== formData.confirmPassword && (
+                    <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
+                  )}
+                </div>
+
+                {/* Summary of entered data */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-700 mb-2">Registration Summary:</h3>
+                  <div className="text-sm text-gray-600 space-y-1">
+                    <p><strong>Name:</strong> {formData.firstName} {formData.lastName}</p>
+                    <p><strong>Email:</strong> {formData.email}</p>
+                    <p><strong>Phone:</strong> {formData.phone}</p>
+                    <p><strong>Date of Birth:</strong> {formData.dob || 'Not specified'}</p>
+                    <p><strong>Gender:</strong> {formData.gender || 'Not specified'}</p>
+                    <p><strong>Blood Type:</strong> {formData.bloodType || 'Not specified'}</p>
                   </div>
                 </div>
 
@@ -406,6 +435,7 @@ const handleSubmit = async (e) => {
 
                 <div className="flex justify-between">
                   <motion.button
+                    type="button"
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={prevStep}
@@ -417,7 +447,8 @@ const handleSubmit = async (e) => {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     type="submit"
-                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition flex items-center gap-2"
+                    disabled={formData.password !== formData.confirmPassword || !formData.password}
+                    className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transition flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <FaClinicMedical className="text-lg" />
                     Complete Registration

@@ -1,11 +1,35 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiUser, FiMail, FiPhone, FiLock, FiCalendar } from 'react-icons/fi';
+import { FaHeartbeat, FaUserInjured, FaClinicMedical, FaStethoscope } from 'react-icons/fa';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
+
+const specialties = [
+  'Cardiology', 'Neurology', 'Pediatrics', 'Orthopedics', 
+  'Dermatology', 'Psychiatry', 'Oncology', 'Gynecology',
+  'Urology', 'Ophthalmology', 'ENT', 'General Medicine'
+];
+
+const qualifications = [
+  'MBBS', 'MD', 'MS', 'DM', 'MCh', 'DNB', 
+  'BDS', 'MDS', 'BPT', 'MPT', 'PhD'
+];
+
+const genderOptions = ['Male', 'Female', 'Other', 'Prefer not to say'];
+const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+const doctorSteps = [
+  { id: 'personal', title: 'Personal Information', icon: FiUser },
+  { id: 'professional', title: 'Professional Details', icon: FaStethoscope },
+  { id: 'availability', title: 'Availability', icon: FiCalendar },
+  { id: 'credentials', title: 'Credentials', icon: FiLock },
+  { id: 'review', title: 'Review', icon: FaClinicMedical }
+];
 
 export default function RegistrationPortal() {
-  const [selectedRole, setSelectedRole] = useState(null);
+  const router = useRouter();
   const [hoveredCard, setHoveredCard] = useState(null);
   const [showPatientModal, setShowPatientModal] = useState(false);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -99,28 +123,25 @@ const [isSubmitting, setIsSubmitting] = useState(false);
 
   const roles = [
     {
-      id: 'patient',
+      id: 'patient-registration',
       title: 'Patient',
       description: 'Register to book appointments and manage your health records',
       icon: '👨‍⚕️',
-      color: 'from-blue-500 to-blue-600',
-      component: <PatientRegistration onBack={() => setSelectedRole(null)} />
+      color: 'from-blue-500 to-blue-600'
     },
     {
-      id: 'doctor',
+      id: 'doctor-registration',
       title: 'Doctor',
       description: 'Join our network of healthcare professionals',
       icon: '🩺',
-      color: 'from-purple-500 to-purple-600',
-      component: <DoctorRegistration onBack={() => setSelectedRole(null)} />
+      color: 'from-purple-500 to-purple-600'
     },
     {
-      id: 'clinic',
+      id: 'clinic-registration',
       title: 'Clinic',
       description: 'Register your healthcare facility with our platform',
       icon: '🏥',
-      color: 'from-emerald-500 to-emerald-600',
-      component: <ClinicRegistration onBack={() => setSelectedRole(null)} />
+      color: 'from-emerald-500 to-emerald-600'
     }
   ];
 const steps = [
@@ -138,11 +159,11 @@ const steps = [
 
   const handlePatientSubmit = async (e) => {
     e.preventDefault();
-
+console.log("this is data",patientFormData)
     if (currentPatientStep === 3) {
       setIsPatientLoading(true);
       try {
-        const response = await fetch('https://practo-backend.vercel.app/api/patients/register', {
+        const response = await fetch('http://localhost:3001/api/patients/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -401,63 +422,830 @@ const steps = [
   //   }
   // };
   const handleCardClick = (roleId) => {
-    router.push(`/register/${roleId}`);
-  };
+  if (roleId === 'patient-registration') {
+    setShowPatientModal(true);
+  } else if (roleId === 'doctor-registration') {
+    setShowDoctorModal(true);
+  } else if (roleId === 'clinic-registration') {
+    setShowClinicModal(true);
+  }
+};
 
+// Clinic form handlers
+// const handleClinicInputChange = (e) => {
+//   const { name, value } = e.target;
+//   setClinicFormData(prev => ({ ...prev, [name]: value }));
+// };
+
+const handleClinicInputChange = (e) => {
+  const { name, value } = e.target;
+  setClinicFormData(prev => ({ 
+    ...prev, 
+    [name]: value 
+  }));
+  
+  // Clear error when field is changed
+  if (clinicErrors[name]) {
+    setClinicErrors(prev => ({ ...prev, [name]: '' }));
+  }
+};
+
+const handleClinicSpecialtyChange = (e) => {
+  const { value, checked } = e.target;
+  setClinicFormData(prev => {
+    if (checked) {
+      return { ...prev, specialties: [...prev.specialties, value] };
+    } else {
+      return { ...prev, specialties: prev.specialties.filter(s => s !== value) };
+    }
+  });
+};
+
+const handleClinicOpeningHoursChange = (day, field, value) => {
+  setClinicFormData(prev => ({
+    ...prev,
+    openingHours: {
+      ...prev.openingHours,
+      [day]: {
+        ...prev.openingHours[day],
+        [field]: value
+      }
+    }
+  }));
+};
+
+const handleClinicFileChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    setIsClinicSubmitting(true);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setClinicFormData(prev => ({ ...prev, profileImage: reader.result }));
+    };
+    reader.readAsDataURL(file);
+
+    const cloudinaryUrl = await uploadImageToCloudinary(file);
+    setClinicFormData(prev => ({ ...prev, logo: cloudinaryUrl }));
+  } catch (error) {
+    console.error('Error uploading clinic logo:', error);
+  } finally {
+    setIsClinicSubmitting(false);
+  }
+};
+const clinicTypes = [
+    { value: 'general', label: 'General Practice', icon: '🏥' },
+    { value: 'specialty', label: 'Specialty Clinic', icon: '⚕️' },
+    { value: 'dental', label: 'Dental Clinic', icon: '🦷' },
+    { value: 'pediatric', label: 'Pediatric Clinic', icon: '👶' },
+    { value: 'surgical', label: 'Surgical Center', icon: '🏥' },
+    { value: 'diagnostic', label: 'Diagnostic Center', icon: '🔬' },
+  ];
+// const validateClinicStep = (step) => {
+//     const newErrors = {};
+    
+//     if (!clinicFormData.clinicName.trim()) {
+//       newErrors.clinicName = 'Clinic name is required';
+//     }
+    
+//     if (!clinicFormData.address.trim()) {
+//       newErrors.address = 'Address is required';
+//     }
+    
+//     if (!clinicFormData.city.trim()) {
+//       newErrors.city = 'City is required';
+//     }
+    
+//     if (!clinicFormData.country.trim()) {
+//       newErrors.country = 'Country is required';
+//     }
+    
+//     if (!clinicFormData.phone.trim()) {
+//       newErrors.phone = 'Phone number is required';
+//     } else if (!/^[\d\s\+\-\(\)]{10,15}$/.test(clinicFormData.phone)) {
+//       newErrors.phone = 'Invalid phone number format';
+//     }
+    
+//     if (!clinicFormData.email.trim()) {
+//       newErrors.email = 'Email is required';
+//     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clinicFormData.email)) {
+//       newErrors.email = 'Invalid email format';
+//     }
+//     if (!clinicFormData.password.trim()) {
+//     newErrors.password = 'Password is required';
+//   } else if (clinicFormData.password.length < 8) {
+//     newErrors.password = 'Password must be at least 8 characters';
+//   } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/.test(clinicFormData.password)) {
+//     newErrors.password = 'Password must contain uppercase, lowercase, number, and special character';
+//   }
+//     setClinicErrors(newErrors);
+//     return Object.keys(newErrors).length === 0;
+//   };
+
+// const nextClinicStep = () => {
+//   if (validateClinicStep(currentClinicStep)) {
+//     setCurrentClinicStep(prev => prev + 1);
+//   }
+// };
+
+// const prevClinicStep = () => {
+//   setCurrentClinicStep(prev => prev - 1);
+// };
+
+
+const validateClinicStep = (step) => {
+  const newErrors = {};
+  
+  if (step === 0) {
+    if (!clinicFormData.clinicName.trim()) newErrors.clinicName = 'Clinic name is required';
+    if (!clinicFormData.clinicType) newErrors.clinicType = 'Clinic type is required';
+  } 
+  else if (step === 1) {
+    if (!clinicFormData.address.trim()) newErrors.address = 'Address is required';
+    if (!clinicFormData.city.trim()) newErrors.city = 'City is required';
+    if (!clinicFormData.country.trim()) newErrors.country = 'Country is required';
+    if (!clinicFormData.phone.trim()) newErrors.phone = 'Phone is required';
+    if (!clinicFormData.email.trim()) newErrors.email = 'Email is required';
+    else if (!/^\S+@\S+\.\S+$/.test(clinicFormData.email)) newErrors.email = 'Invalid email format';
+    if (!clinicFormData.password) newErrors.password = 'Password is required';
+    else if (clinicFormData.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+  }
+  // Add validation for other steps as needed
+  
+  setClinicErrors(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+const nextClinicStep = () => {
+  if (validateClinicStep(currentClinicStep)) {
+    setCurrentClinicStep(prev => prev + 1);
+  }
+};
+
+const prevClinicStep = () => {
+  setCurrentClinicStep(prev => Math.max(prev - 1, 0));
+};
+
+// const handleClinicSubmit = async (e) => {
+//   console.log(currentClinicStep);
+//   e.preventDefault();
+  
+//   if (!validateClinicStep(currentClinicStep)) {
+//     return;
+//   }
+// console.log("asf",clinicFormData);
+//   setIsClinicSubmitting(true);
+//   try {
+//     const response = await fetch('https://practo-backend.vercel.app/api/clinic/register', {
+//       method: 'POST',
+//       headers: {
+//         'Content-Type': 'application/json',
+//       },
+//       body: JSON.stringify(clinicFormData)
+//     });
+
+//     if (response.ok) {
+//       setClinicRegistrationSuccess(true);
+//       setTimeout(() => {
+//         setClinicFormData({
+//           clinicName: '',
+//           address: '',
+//           city: '',
+//           state: '',
+//           postalCode: '',
+//           country: '',
+//           phone: '',
+//           email: '',
+//           website: '',
+//           registrationNumber: '',
+//           password: '',
+//           taxId: '',
+//           clinicType: 'general',
+//           specialties: [],
+//           openingHours: {
+//             monday: { open: '09:00', close: '17:00' },
+//             tuesday: { open: '09:00', close: '17:00' },
+//             wednesday: { open: '09:00', close: '17:00' },
+//             thursday: { open: '09:00', close: '17:00' },
+//             friday: { open: '09:00', close: '17:00' },
+//             saturday: { open: '', close: '' },
+//             sunday: { open: '', close: '' },
+//           },
+//           description: '',
+//           logo: null,
+//         });
+//         setCurrentClinicStep(0);
+//         setIsClinicSubmitting(false);
+//         setShowClinicModal(false);
+//         setClinicRegistrationSuccess(false);
+//       }, 2000);
+//     } else {
+//       const error = await response.json();
+//       console.error('Clinic registration failed:', error);
+//       alert(`Registration failed: ${error.message || 'Server Error'}`);
+//       setIsClinicSubmitting(false);
+//     }
+//   } catch (err) {
+//     console.error('Error submitting clinic form:', err);
+//     alert('Network or server error occurred');
+//     setIsClinicSubmitting(false);
+//   }
+// };
+
+
+const handleClinicSubmit = async (e) => {
+  e.preventDefault();
+  
+  // Validate current step
+  if (!validateClinicStep(currentClinicStep)) {
+    return;
+  }
+
+  // If not last step, proceed to next step
+  if (currentClinicStep < steps.length - 1) {
+    nextClinicStep();
+    return;
+  }
+
+  setIsClinicSubmitting(true);
+  
+  try {
+    const response = await fetch('https://practo-backend.vercel.app/api/clinic/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(clinicFormData)
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || 'Registration failed');
+    }
+
+    const data = await response.json();
+    console.log('Registration successful:', data);
+    setClinicRegistrationSuccess(true);
+    
+    // Reset form after success
+    setTimeout(() => {
+      setClinicFormData({
+        clinicName: '',
+        address: '',
+        city: '',
+        state: '',
+        postalCode: '',
+        country: '',
+        phone: '',
+        email: '',
+        website: '',
+        registrationNumber: '',
+        password: '',
+        taxId: '',
+        clinicType: 'general',
+        specialties: [],
+        openingHours: {
+          monday: { open: '09:00', close: '17:00' },
+          tuesday: { open: '09:00', close: '17:00' },
+          wednesday: { open: '09:00', close: '17:00' },
+          thursday: { open: '09:00', close: '17:00' },
+          friday: { open: '09:00', close: '17:00' },
+          saturday: { open: '', close: '' },
+          sunday: { open: '', close: '' },
+        },
+        description: '',
+        logo: null,
+      });
+      setCurrentClinicStep(0);
+      setShowClinicModal(false);
+    }, 2000);
+  } catch (err) {
+    console.error('Error submitting clinic form:', err);
+    alert(`Registration failed: ${err.message || 'Please try again'}`);
+  } finally {
+    setIsClinicSubmitting(false);
+  }
+};
+const medicalSpecialties = [
+    { name: 'Cardiology', icon: '❤️' },
+    { name: 'Dermatology', icon: '🧴' },
+    { name: 'Endocrinology', icon: '🧬' },
+    { name: 'Gastroenterology', icon: '🫁' },
+    { name: 'Neurology', icon: '🧠' },
+    { name: 'Oncology', icon: '🎗️' },
+    { name: 'Ophthalmology', icon: '👁️' },
+    { name: 'Orthopedics', icon: '🦴' },
+    { name: 'Pediatrics', icon: '👶' },
+    { name: 'Psychiatry', icon: '🧘' },
+    { name: 'Pulmonology', icon: '🫁' },
+    { name: 'Rheumatology', icon: '🦴' },
+    { name: 'Urology', icon: '🩺' },
+  ];
+
+const renderClinicStepContent = () => {
+    switch (currentClinicStep) {
+      case 0: // Basic Information
+        return (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg">
+                📋
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Basic Information
+              </h2>
+              <p className="text-gray-600 mt-2">Let's start with the basics about your clinic</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="group">
+                <label htmlFor="clinicName" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Clinic Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="clinicName"
+                  name="clinicName"
+                  value={clinicFormData.clinicName}
+                  onChange={handleClinicInputChange}
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 hover:border-blue-300 ${clinicErrors.clinicName ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="Enter clinic name"
+                />
+                {clinicErrors.clinicName && (
+                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.clinicName}</p>
+                )}
+              </div>
+              
+              <div className="group">
+                <label htmlFor="clinicType" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Clinic Type
+                </label>
+                <select
+                  id="clinicType"
+                  name="clinicType"
+                  value={clinicFormData.clinicType}
+                  onChange={handleClinicInputChange}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 hover:border-blue-300"
+                >
+                  {clinicTypes.map(type => (
+                    <option key={type.value} value={type.value}>
+                      {type.icon} {type.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            
+            <div className="group">
+              <label htmlFor="description" className="block text-sm font-semibold text-gray-700 mb-2">
+                Clinic Description
+              </label>
+              <textarea
+                id="description"
+                name="description"
+                rows={4}
+                value={clinicFormData.description}
+                onChange={handleClinicInputChange}
+                className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-blue-100 focus:border-blue-500 hover:border-blue-300 resize-none"
+                placeholder="Tell us about your clinic's mission and services..."
+              />
+            </div>
+            
+            <div className="group">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Clinic Logo
+              </label>
+              <div className="flex items-center space-x-6">
+                <div className="relative group">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 border-4 border-white shadow-lg transition-transform duration-300 group-hover:scale-105">
+                    {clinicFormData.logo ? (
+                      <img src={clinicFormData.logo} alt="Clinic logo" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-4xl text-blue-400">
+                        🏥
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <label className="cursor-pointer group">
+                  <div className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center space-x-2">
+                    <span>📷</span>
+                    <span className="font-medium">Upload Logo</span>
+                  </div>
+                  <input type="file" className="sr-only" onChange={handleClinicFileChange } accept="image/*" />
+                </label>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 1: // Contact Information
+        return (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-green-500 to-teal-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg">
+                📞
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
+                Contact Information
+              </h2>
+              <p className="text-gray-600 mt-2">How can patients reach your clinic?</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label htmlFor="address" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Address <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  value={clinicFormData.address}
+                  onChange={handleClinicInputChange}
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${clinicErrors.address ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="Street address"
+                />
+                {clinicErrors.address && (
+                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.address}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="city" className="block text-sm font-semibold text-gray-700 mb-2">
+                  City <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="city"
+                  name="city"
+                  value={clinicFormData.city}
+                  onChange={handleClinicInputChange}
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${clinicErrors.city ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="City"
+                />
+                {clinicErrors.city && (
+                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.city}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="state" className="block text-sm font-semibold text-gray-700 mb-2">
+                  State/Province
+                </label>
+                <input
+                  type="text"
+                  id="state"
+                  name="state"
+                  value={clinicFormData.state}
+                  onChange={handleClinicInputChange}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300"
+                  placeholder="State or province"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="postalCode" className="block text-sm font-semibold text-gray-700 mb-2">
+                  ZIP/Postal Code
+                </label>
+                <input
+                  type="text"
+                  id="postalCode"
+                  name="postalCode"
+                  value={clinicFormData.postalCode}
+                  onChange={handleClinicInputChange}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300"
+                  placeholder="Postal code"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="country" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Country <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="country"
+                  name="country"
+                  value={clinicFormData.country}
+                  onChange={handleClinicInputChange}
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${clinicErrors.country ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="Country"
+                />
+                {clinicErrors.country && (
+                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.country}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Phone Number <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  value={clinicFormData.phone}
+                  onChange={handleClinicInputChange}
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${clinicErrors.phone ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="+1 (555) 123-4567"
+                />
+                {clinicErrors.phone && (
+                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.phone}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Email <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={clinicFormData.email}
+                  onChange={handleClinicInputChange}
+                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${clinicErrors.email ? 'border-red-500' : 'border-gray-200'}`}
+                  placeholder="contact@clinic.com"
+                />
+                {clinicErrors.email && (
+                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.email}</p>
+                )}
+              </div>
+              
+              <div>
+                <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  id="website"
+                  name="website"
+                  value={clinicFormData.website}
+                  onChange={handleClinicInputChange}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300"
+                  placeholder="https://yourclinic.com"
+                />
+              </div>
+               <div className="group">
+          <label htmlFor="password" className="block text-sm font-semibold text-gray-700 mb-2">
+            Password <span className="text-red-500">*</span>
+          </label>
+          <div className="relative">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={clinicFormData.password}
+              onChange={handleClinicInputChange}
+              className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${
+                clinicErrors.password ? 'border-red-500' : 'border-gray-200'
+              }`}
+              placeholder="Create a secure password"
+            />
+            <button
+              type="button"
+              className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+              onClick={() => {
+                const passwordInput = document.getElementById('password');
+                if (passwordInput.type === 'password') {
+                  passwordInput.type = 'text';
+                } else {
+                  passwordInput.type = 'password';
+                }
+              }}
+            >
+              👁️
+            </button>
+          </div>
+          {clinicErrors.password && (
+            <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.password}</p>
+          )}
+          <div className="mt-2 text-xs text-gray-500">
+            Password must contain:
+            <ul className="list-disc pl-5 mt-1">
+              <li className={clinicFormData.password.length >= 8 ? 'text-green-500' : ''}>At least 8 characters</li>
+              <li className={/[A-Z]/.test(clinicFormData.password) ? 'text-green-500' : ''}>One uppercase letter</li>
+              <li className={/[a-z]/.test(clinicFormData.password) ? 'text-green-500' : ''}>One lowercase letter</li>
+              <li className={/\d/.test(clinicFormData.password) ? 'text-green-500' : ''}>One number</li>
+              <li className={/[@$!%*?&]/.test(clinicFormData.password) ? 'text-green-500' : ''}>One special character</li>
+            </ul>
+          </div>
+        </div>
+            </div>
+          </div>
+        );
+
+      case 2: // Business Information
+        return (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-orange-500 to-red-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg">
+                💼
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                Business Information
+              </h2>
+              <p className="text-gray-600 mt-2">Official business details and registration</p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div>
+                <label htmlFor="registrationNumber" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Business Registration Number
+                </label>
+                <input
+                  type="text"
+                  id="registrationNumber"
+                  name="registrationNumber"
+                  value={clinicFormData.registrationNumber}
+                  onChange={handleClinicInputChange}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-orange-100 focus:border-orange-500 hover:border-orange-300"
+                  placeholder="Registration number"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="taxId" className="block text-sm font-semibold text-gray-700 mb-2">
+                  Tax ID
+                </label>
+                <input
+                  type="text"
+                  id="taxId"
+                  name="taxId"
+                  value={clinicFormData.taxId}
+                  onChange={handleClinicInputChange}
+                  className="w-full px-4 py-3 bg-white border-2 border-gray-200 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-orange-100 focus:border-orange-500 hover:border-orange-300"
+                  placeholder="Tax identification number"
+                />
+              </div>
+            </div>
+          </div>
+        );
+
+      case 3: // Specialties
+        return (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg">
+                ⚕️
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                Medical Specialties
+              </h2>
+              <p className="text-gray-600 mt-2">Select the specialties your clinic offers</p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {medicalSpecialties.map((specialty, index) => (
+                <div 
+                  key={specialty.name} 
+                  className="group relative"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <input
+                    type="checkbox"
+                    id={`specialty-${specialty.name}`}
+                    value={specialty.name}
+                    checked={clinicFormData.specialties.includes(specialty.name)}
+                    onChange={handleClinicSpecialtyChange }
+                    className="sr-only"
+                  />
+                  <label 
+                    htmlFor={`specialty-${specialty.name}`}
+                    className={`block p-4 rounded-xl border-2 cursor-pointer transition-all duration-300 hover:scale-105 ${
+                      clinicFormData.specialties.includes(specialty.name)
+                        ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg'
+                        : 'border-gray-200 bg-white hover:border-purple-300 hover:shadow-md'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <span className="text-2xl">{specialty.icon}</span>
+                      <span className="font-medium text-gray-800">{specialty.name}</span>
+                      {clinicFormData.specialties.includes(specialty.name) && (
+                        <span className="ml-auto text-purple-500">✓</span>
+                      )}
+                    </div>
+                  </label>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      case 4: // Opening Hours
+        return (
+          <div className="space-y-8 animate-fadeIn">
+            <div className="text-center mb-8">
+              <div className="w-20 h-20 mx-auto mb-4 bg-gradient-to-br from-indigo-500 to-blue-600 rounded-full flex items-center justify-center text-white text-3xl shadow-lg">
+                🕐
+              </div>
+              <h2 className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-blue-600 bg-clip-text text-transparent">
+                Opening Hours
+              </h2>
+              <p className="text-gray-600 mt-2">When is your clinic open for patients?</p>
+            </div>
+
+            <div className="space-y-4">
+              {Object.entries(clinicFormData.openingHours).map(([day, hours], index) => (
+                <div 
+                  key={day} 
+                  className="p-6 bg-white rounded-xl border-2 border-gray-200 hover:border-indigo-300 transition-all duration-300 animate-slideInLeft"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-100 to-blue-100 rounded-full flex items-center justify-center">
+                        <span className="font-bold text-indigo-600 capitalize">{day.slice(0, 2)}</span>
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-800 capitalize">{day}</h3>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="time"
+                          value={hours.open}
+                          onChange={(e) => handleClinicOpeningHoursChange(day, 'open', e.target.value)}
+                          disabled={!hours.open && !hours.close}
+                          className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300"
+                        />
+                        <span className="text-gray-500 font-medium">to</span>
+                        <input
+                          type="time"
+                          value={hours.close}
+                          onChange={(e) => handleClinicOpeningHoursChange(day, 'close', e.target.value)}
+                          disabled={!hours.open && !hours.close}
+                          className="px-3 py-2 border-2 border-gray-200 rounded-lg focus:ring-4 focus:ring-indigo-100 focus:border-indigo-500 disabled:bg-gray-100 disabled:text-gray-400 transition-all duration-300"
+                        />
+                      </div>
+                      
+                      <label className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={!hours.open && !hours.close}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              handleClinicOpeningHoursChange(day, 'open', '');
+                              handleClinicOpeningHoursChange(day, 'close', '');
+                            } else {
+                              handleClinicOpeningHoursChange(day, 'open', '09:00');
+                              handleClinicOpeningHoursChange(day, 'close', '17:00');
+                            }
+                          }}
+                          className="w-4 h-4 text-indigo-600 bg-gray-100 border-gray-300 rounded focus:ring-indigo-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">Closed</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {selectedRole ? (
-          <div className="bg-white rounded-2xl shadow-xl p-8">
-            <button 
-              onClick={() => setSelectedRole(null)}
-              className="mb-6 flex items-center text-gray-600 hover:text-gray-900"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
-              </svg>
-              Back to role selection
-            </button>
-            {roles.find(r => r.id === selectedRole)?.component}
-          </div>
-        ) : (
-          <>
-            <div className="text-center mb-12">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">Join Our Healthcare Network</h1>
-              <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                Select your role to begin your registration journey
-              </p>
-            </div>
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Join Our Healthcare Network</h1>
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
+            Select your role to begin your registration journey
+          </p>
+        </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {roles.map((role) => (
-                <motion.div
-                  key={role.id}
-                  className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 ${hoveredCard === role.id ? 'scale-105' : 'scale-100'}`}
-                  onMouseEnter={() => setHoveredCard(role.id)}
-                  onMouseLeave={() => setHoveredCard(null)}
-                  onClick={() => handleCardClick(role.id)}
-                  whileHover={{ y: -10 }}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${role.color} opacity-10`}></div>
-                  <div className="relative p-8 h-full flex flex-col">
-                    <div className="text-5xl mb-6">{role.icon}</div>
-                    <h3 className="text-2xl font-bold text-gray-900 mb-3">{role.title}</h3>
-                    <p className="text-gray-600 mb-6 flex-grow">{role.description}</p>
-                    <div className="mt-auto">
-                      <button className={`w-full py-3 px-6 rounded-lg font-medium bg-gradient-to-br ${role.color} text-white shadow-md hover:shadow-lg transition-all`}>
-                        Register as {role.title}
-                      </button>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </>
-        )}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {roles.map((role) => (
+            <motion.div
+              key={role.id}
+              className={`relative bg-white rounded-2xl shadow-xl overflow-hidden transition-all duration-300 ${hoveredCard === role.id ? 'scale-105' : 'scale-100'}`}
+              onMouseEnter={() => setHoveredCard(role.id)}
+              onMouseLeave={() => setHoveredCard(null)}
+              onClick={() => handleCardClick(role.id)}
+              whileHover={{ y: -10 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <div className={`absolute inset-0 bg-gradient-to-br ${role.color} opacity-10`}></div>
+              <div className="relative p-8 h-full flex flex-col">
+                <div className="text-5xl mb-6">{role.icon}</div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">{role.title}</h3>
+                <p className="text-gray-600 mb-6 flex-grow">{role.description}</p>
+                <div className="mt-auto">
+                  <button className={`w-full py-3 px-6 rounded-lg font-medium bg-gradient-to-br ${role.color} text-white shadow-md hover:shadow-lg transition-all`}>
+                    Register as {role.title}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
       </div>
 
       {/* Patient Registration Modal */}
