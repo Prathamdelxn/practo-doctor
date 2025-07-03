@@ -373,7 +373,7 @@ export default function DashboardLayout({ children }) {
     { name: 'Appointments', href: '/patient-dashboard/appointments', icon: <FiCalendar size={20} /> },
     { name: 'Prescriptions', href: '/patient-dashboard/prescriptions', icon: <FaClinicMedical size={20} /> },
     { name: 'Medical Records', href: '/patient-dashboard/medical-records', icon: <FiFileText size={20} /> },
-    { name: 'Health Data', href: '/patient-dashboard/health-data', icon: <FaHeartbeat size={20} /> },
+    // { name: 'Health Data', href: '/patient-dashboard/health-data', icon: <FaHeartbeat size={20} /> },
     { name: 'Settings', href: '/patient-dashboard/settings', icon: <FiSettings size={20} /> },
   ]
  
