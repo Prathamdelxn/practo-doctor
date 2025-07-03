@@ -696,16 +696,6 @@ const DoctorAppointmentsDashboard = () => {
     else if (activeTab === 'checkedIn') matchesTab = appointment.status === 'checkedIn';
     else if (activeTab === 'cancelled') matchesTab = appointment.status === 'cancelled';
     
-<<<<<<< HEAD
-     if (activeTab === 'all') {
-   matchesTab =["confirmed","pending"].includes(appointment.status)// Only show confirmed appointments in "All" tab
-  } else if (activeTab === 'checkedIn') {
-    matchesTab = appointment.status === 'checkedIn';
-  } else if (activeTab === 'cancelled') {
-    matchesTab = appointment.status === 'cancelled';
-  }
-=======
->>>>>>> 977276913fb9109f7ab5ceab5ee428287a4c089a
     return matchesSearch && matchesTab;
   });
 
