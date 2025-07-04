@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { 
@@ -10,7 +10,9 @@ import {
   EyeSlashIcon, 
   EnvelopeIcon,
   LockClosedIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ExclamationTriangleIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
@@ -19,6 +21,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState(null);
+  const [showErrorModal, setShowErrorModal] = useState(false);
 
   // Validation schema
   const loginSchema = Yup.object().shape({
@@ -65,9 +68,11 @@ export default function LoginPage() {
         }
       } else {
         setError(data.message || 'Login failed');
+        setShowErrorModal(true);
       }
     } catch (err) {
       setError('An error occurred. Please try again.');
+      setShowErrorModal(true);
     } finally {
       setSubmitting(false);
     }
@@ -209,6 +214,59 @@ export default function LoginPage() {
           </div>
         </motion.div>
       </div>
+
+      {/* Enhanced Error Modal */}
+      <AnimatePresence>
+        {showErrorModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-blue-500/20 backdrop-blur-md flex items-center justify-center p-4 z-50"
+            onClick={() => setShowErrorModal(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.9, y: 20 }}
+              className="bg-gradient-to-br from-white to-blue-50 rounded-2xl shadow-2xl max-w-sm w-full p-6 relative border border-blue-100 overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Decorative elements */}
+              <div className="absolute -top-20 -right-20 w-40 h-40 bg-blue-100 rounded-full opacity-20"></div>
+              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-blue-200 rounded-full opacity-20"></div>
+              
+              <button
+                onClick={() => setShowErrorModal(false)}
+                className="absolute top-4 right-4 text-blue-400 hover:text-blue-600 transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+              
+              <div className="flex flex-col items-center text-center space-y-4 relative z-10">
+                <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-full shadow-inner">
+                  <ExclamationTriangleIcon className="h-8 w-8 text-blue-600" />
+                </div>
+                
+                <h3 className="text-xl font-bold text-gray-800">Login Failed</h3>
+                
+                <p className="text-gray-600">
+                  {error || 'The email or password you entered is incorrect. Please try again.'}
+                </p>
+                
+                <div className="w-full pt-4">
+                  <button
+                    onClick={() => setShowErrorModal(false)}
+                    className="w-full px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-medium rounded-lg transition-all shadow-md hover:shadow-lg"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

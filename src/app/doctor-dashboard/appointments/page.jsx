@@ -92,10 +92,10 @@
 //   const filteredAppointments = appointments.filter(appointment => {
 //     const matchesSearch = appointment.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
 //                          appointment.patientNote?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
 //     let matchesTab = true;
-   
-    
+
+
 //      if (activeTab === 'all') {
 //     matchesTab = appointment.status === 'confirmed';  // Only show confirmed appointments in "All" tab
 //   } else if (activeTab === 'checkedIn') {
@@ -118,10 +118,10 @@
 //         setShowStatusDropdown(null);
 //         return;
 //       }
-      
+
 //       // For other status changes, update immediately
 //       await new Promise(resolve => setTimeout(resolve, 500));
-      
+
 //       setAppointments(prevAppointments => 
 //         prevAppointments.map(appointment => 
 //           appointment.id === appointmentId 
@@ -181,7 +181,7 @@
 //     alert('Please fill all medicine details and additional notes');
 //     return;
 //   }
-  
+
 //   try {
 //     // First update the prescription data
 //     const prescriptionResponse = await fetch('https://practo-backend.vercel.app/api/appointment/addMedicines', {
@@ -217,7 +217,7 @@
 //     }
 
 //     const statusData = await statusResponse.json();
-    
+
 //     // Update local state
 //     setAppointments(prevAppointments => 
 //       prevAppointments.map(appointment => 
@@ -231,7 +231,7 @@
 //           : appointment
 //       )
 //     );
-    
+
 //     // Reset form
 //     setPrescription({
 //       medicines: [{ name: '', dosage: '', frequency: '', duration: '' }],
@@ -239,7 +239,7 @@
 //     });
 //     setShowPrescriptionForm(null);
 //       setExpandedAppointment(null); 
-    
+
 //   } catch (error) {
 //     console.error("Error submitting prescription:", error);
 //     // Optionally show error to user
@@ -356,7 +356,7 @@
 //                         </p>
 //                       </div>
 //                     </div>
-                    
+
 //                     {/* Time Column */}
 //                     <div className="col-span-6 md:col-span-2">
 //                       <div className="flex items-center gap-2">
@@ -366,14 +366,14 @@
 //                         </span>
 //                       </div>
 //                     </div>
-                    
+
 //                     {/* Reason Column */}
 //                     <div className="hidden md:block col-span-4">
 //                       <p className="text-sm text-gray-600/90 truncate">
 //                         {appointment.patientNote}
 //                       </p>
 //                     </div>
-                    
+
 //                     {/* Status Column */}
 //                     <div className="col-span-6 md:col-span-2 relative">
 //                       <div className="status-dropdown">
@@ -391,14 +391,14 @@
 //                             <ChevronDown size={12} />
 //                           </button>
 //                         )}
-                        
+
 //                         {activeTab !== 'all' && (
 //                           <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium ${statusStyles[appointment.status]?.bg || 'bg-gray-100'} ${statusStyles[appointment.status]?.text || 'text-gray-600'} border ${statusStyles[appointment.status]?.border || 'border-gray-300'}`}>
 //                             {statusStyles[appointment.status]?.icon || <Clock className="w-4 h-4" />}
 //                             {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
 //                           </div>
 //                         )}
-                        
+
 //                         {/* Status Dropdown Menu */}
 //                         {showStatusDropdown === appointment.id && activeTab === 'all' && (
 //                           <div className="absolute top-full left-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-200/70 z-30 overflow-hidden">
@@ -423,7 +423,7 @@
 //                         )}
 //                       </div>
 //                     </div>
-                    
+
 //                     {/* Actions Column */}
 //                     <div className="col-span-6 md:col-span-1 flex justify-end">
 //                       <button 
@@ -466,7 +466,7 @@
 //                             <Pill className="text-blue-500 w-4 h-4" />
 //                             Prescription
 //                           </h5>
-                          
+
 //                           {prescription.medicines.map((medicine, index) => (
 //                             <div key={index} className="grid grid-cols-12 gap-3 mb-3">
 //                               <div className="col-span-5">
@@ -530,7 +530,7 @@
 //                               </div>
 //                             </div>
 //                           ))}
-                          
+
 //                           <button
 //                             type="button"
 //                             onClick={addMedicineField}
@@ -539,7 +539,7 @@
 //                             <Plus size={14} />
 //                             Add another medicine
 //                           </button>
-                          
+
 //                           <div className="mb-4">
 //                             <label className="block text-xs text-gray-500 mb-1">Additional Notes</label>
 //                             <textarea
@@ -552,7 +552,7 @@
 //                               required
 //                             />
 //                           </div>
-                          
+
 //                           <div className="flex justify-end gap-3">
 //                             <button
 //                               type="button"
@@ -689,13 +689,13 @@ const DoctorAppointmentsDashboard = () => {
 
   const filteredAppointments = appointments.filter(appointment => {
     const matchesSearch = appointment.patientName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         appointment.patientNote?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+      appointment.patientNote?.toLowerCase().includes(searchTerm.toLowerCase());
+
     let matchesTab = true;
-    if (activeTab === 'all'){ matchesTab =["confirmed","pending"].includes(appointment.status)}
+    if (activeTab === 'all') { matchesTab = ["confirmed", "pending"].includes(appointment.status) }
     else if (activeTab === 'checkedIn') matchesTab = appointment.status === 'checkedIn';
     else if (activeTab === 'cancelled') matchesTab = appointment.status === 'cancelled';
-    
+
     return matchesSearch && matchesTab;
   });
 
@@ -709,12 +709,12 @@ const DoctorAppointmentsDashboard = () => {
         setShowStatusDropdown(null);
         return;
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, 500));
-      
-      setAppointments(prev => 
-        prev.map(appointment => 
-          appointment.id === appointmentId 
+
+      setAppointments(prev =>
+        prev.map(appointment =>
+          appointment.id === appointmentId
             ? { ...appointment, status: newStatus }
             : appointment
         )
@@ -748,7 +748,7 @@ const DoctorAppointmentsDashboard = () => {
   };
 
   const validatePrescription = () => {
-    return prescription.medicines.every(med => 
+    return prescription.medicines.every(med =>
       med.name && med.dosage && med.frequency && med.duration
     ) && prescription.additionalNotes;
   };
@@ -758,7 +758,7 @@ const DoctorAppointmentsDashboard = () => {
       alert('Please fill all medicine details and notes');
       return;
     }
-    
+
     try {
       const prescriptionResponse = await fetch('https://practo-backend.vercel.app/api/appointment/addMedicines', {
         method: 'PATCH',
@@ -780,25 +780,25 @@ const DoctorAppointmentsDashboard = () => {
 
       if (!statusResponse.ok) throw new Error('Failed to update status');
 
-      setAppointments(prev => 
-        prev.map(appointment => 
-          appointment._id === appointmentId 
-            ? { 
-                ...appointment, 
-                status: 'checkedIn',
-                medicines: prescription.medicines,
-                description: prescription.additionalNotes
-              }
+      setAppointments(prev =>
+        prev.map(appointment =>
+          appointment._id === appointmentId
+            ? {
+              ...appointment,
+              status: 'checkedIn',
+              medicines: prescription.medicines,
+              description: prescription.additionalNotes
+            }
             : appointment
         )
       );
-      
+
       setPrescription({
         medicines: [{ name: '', dosage: '', frequency: '', duration: '' }],
         additionalNotes: ''
       });
       setShowPrescriptionForm(null);
-      setExpandedAppointment(null); 
+      setExpandedAppointment(null);
     } catch (error) {
       console.error("Error submitting prescription:", error);
     }
@@ -882,13 +882,12 @@ const DoctorAppointmentsDashboard = () => {
           <div className="divide-y divide-gray-200/30">
             {filteredAppointments.length > 0 ? (
               filteredAppointments.map((appointment) => (
-                <div 
-                  key={appointment._id} 
-                  className={`relative transition-all duration-200 ${
-                    expandedAppointment === appointment._id || showStatusDropdown === appointment._id 
-                      ? 'bg-blue-50/20 min-h-[200px]' 
+                <div
+                  key={appointment._id}
+                  className={`relative transition-all duration-200 ${expandedAppointment === appointment._id || showStatusDropdown === appointment._id
+                      ? 'bg-blue-50/20 min-h-[200px]'
                       : 'hover:bg-blue-50/10 min-h-[100px]'
-                  }`}
+                    }`}
                   onClick={(e) => {
                     if (!e.target.closest('.status-dropdown') && !e.target.closest('.prescription-form')) {
                       setExpandedAppointment(expandedAppointment === appointment._id ? null : appointment._id);
@@ -913,7 +912,7 @@ const DoctorAppointmentsDashboard = () => {
                         </p>
                       </div>
                     </div>
-                    
+
                     {/* Time Column */}
                     <div className="col-span-6 md:col-span-2">
                       <div className="flex items-center gap-2">
@@ -923,14 +922,19 @@ const DoctorAppointmentsDashboard = () => {
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Reason Column */}
-                    <div className="hidden md:block col-span-4">
+                    <div className="hidden md:flex col-span-4 items-center justify-between gap-4">
                       <p className="text-sm text-gray-600/90 truncate">
                         {appointment.patientNote}
                       </p>
+                      <p className="text-sm text-gray-600/90 font-bold truncate">
+                        ₹ {appointment.doctorFees}
+                      </p>
                     </div>
-                    
+
+
+
                     {/* Status Column */}
                     <div className="col-span-6 md:col-span-2 relative">
                       <div className="status-dropdown">
@@ -948,14 +952,14 @@ const DoctorAppointmentsDashboard = () => {
                             <ChevronDown size={12} />
                           </button>
                         )}
-                        
+
                         {activeTab !== 'all' && (
                           <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-medium ${statusStyles[appointment.status]?.bg || 'bg-gray-100'} ${statusStyles[appointment.status]?.text || 'text-gray-600'} border ${statusStyles[appointment.status]?.border || 'border-gray-300'}`}>
                             {statusStyles[appointment.status]?.icon || <Clock className="w-4 h-4" />}
                             {appointment.status?.charAt(0).toUpperCase() + appointment.status?.slice(1)}
                           </div>
                         )}
-                        
+
                         {/* Status Dropdown Menu */}
                         {showStatusDropdown === appointment._id && activeTab === 'all' && (
                           <div className="absolute top-full left-0 mt-1 w-40 bg-white rounded-xl shadow-lg border border-gray-200/70 z-30 overflow-hidden">
@@ -980,10 +984,10 @@ const DoctorAppointmentsDashboard = () => {
                         )}
                       </div>
                     </div>
-                    
+
                     {/* Actions Column */}
                     <div className="col-span-6 md:col-span-1 flex justify-end">
-                      <button 
+                      <button
                         className="p-1.5 text-gray-400/90 hover:text-gray-600 transition-colors rounded-lg hover:bg-gray-100/50"
                         onClick={(e) => {
                           e.stopPropagation();
@@ -1004,6 +1008,7 @@ const DoctorAppointmentsDashboard = () => {
                           <div className="space-y-1 text-sm text-gray-600">
                             <p><span className="font-medium">Email:</span> {appointment.patientEmail}</p>
                             <p><span className="font-medium">Phone:</span> {appointment.patientNumber}</p>
+                            <p><span className="font-medium">Fees:</span> {appointment.doctorFees}</p>
                           </div>
                         </div>
                         <div>
@@ -1023,7 +1028,7 @@ const DoctorAppointmentsDashboard = () => {
                             <Pill className="text-blue-500 w-4 h-4" />
                             Prescription
                           </h5>
-                          
+
                           {appointment.medicines && appointment.medicines.length > 0 ? (
                             <div className="space-y-4">
                               {appointment.medicines.map((medicine, index) => (
@@ -1046,7 +1051,7 @@ const DoctorAppointmentsDashboard = () => {
                                   </div>
                                 </div>
                               ))}
-                              
+
                               {appointment.description && (
                                 <div className="mt-4">
                                   <h6 className="text-xs font-medium text-gray-500 mb-1">Additional Notes</h6>
@@ -1121,7 +1126,7 @@ const DoctorAppointmentsDashboard = () => {
                                   </div>
                                 </div>
                               ))}
-                              
+
                               <button
                                 type="button"
                                 onClick={addMedicineField}
@@ -1130,7 +1135,7 @@ const DoctorAppointmentsDashboard = () => {
                                 <Plus size={14} />
                                 Add another medicine
                               </button>
-                              
+
                               <div className="mb-4">
                                 <label className="block text-xs text-gray-500 mb-1">Additional Notes</label>
                                 <textarea
@@ -1143,7 +1148,7 @@ const DoctorAppointmentsDashboard = () => {
                                   required
                                 />
                               </div>
-                              
+
                               <div className="flex justify-end gap-3">
                                 <button
                                   type="button"

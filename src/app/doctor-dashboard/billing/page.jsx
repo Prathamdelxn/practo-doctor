@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { 
   Download, 
   Printer, 
@@ -15,79 +15,79 @@ import {
   Eye,
   Stethoscope,
   CreditCard,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
 
 export default function DoctorBilling() {
-  const [bills, setBills] = useState([
-    {
-      id: 'INV-2024-001',
-      patientName: 'John Smith',
-      patientId: 'PT-001',
-      date: '2024-06-10',
-      dueDate: '2024-07-10',
-      amount: 350.00,
-      status: 'Paid',
-      insurance: 'Blue Cross Blue Shield',
-      services: [
-        { code: '99213', description: 'Office Visit - Established Patient', quantity: 1, price: 200.00 },
-        { code: '85025', description: 'Complete Blood Count', quantity: 1, price: 75.00 },
-        { code: '80053', description: 'Comprehensive Metabolic Panel', quantity: 1, price: 75.00 }
-      ]
-    },
-    {
-      id: 'INV-2024-002',
-      patientName: 'Sarah Johnson',
-      patientId: 'PT-002',
-      date: '2024-06-11',
-      dueDate: '2024-07-11',
-      amount: 500.00,
-      status: 'Pending',
-      insurance: 'Aetna',
-      services: [
-        { code: '99214', description: 'Office Visit - Detailed', quantity: 1, price: 300.00 },
-        { code: '93000', description: 'Electrocardiogram', quantity: 1, price: 100.00 },
-        { code: '36415', description: 'Blood Draw', quantity: 1, price: 25.00 },
-        { code: '85025', description: 'Complete Blood Count', quantity: 1, price: 75.00 }
-      ]
-    },
-    {
-      id: 'INV-2024-003',
-      patientName: 'Michael Davis',
-      patientId: 'PT-003',
-      date: '2024-06-08',
-      dueDate: '2024-07-08',
-      amount: 825.00,
-      status: 'Paid',
-      insurance: 'Medicare',
-      services: [
-        { code: '99215', description: 'Office Visit - Comprehensive', quantity: 1, price: 400.00 },
-        { code: '73060', description: 'X-ray Knee', quantity: 1, price: 150.00 },
-        { code: '20610', description: 'Joint Injection', quantity: 1, price: 275.00 }
-      ]
-    },
-    {
-      id: 'INV-2024-004',
-      patientName: 'Emily Wilson',
-      patientId: 'PT-004',
-      date: '2024-06-05',
-      dueDate: '2024-07-05',
-      amount: 275.00,
-      status: 'Overdue',
-      insurance: 'Self-Pay',
-      services: [
-        { code: '99212', description: 'Office Visit - Problem Focused', quantity: 1, price: 150.00 },
-        { code: '87086', description: 'Urine Culture', quantity: 1, price: 50.00 },
-        { code: '81001', description: 'Urinalysis', quantity: 1, price: 75.00 }
-      ]
-    }
-  ]);
-
+  const [bills, setBills] = useState([]);
   const [selectedBill, setSelectedBill] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isPrintModalOpen, setIsPrintModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [userId, setUserId] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState(null);
   const printRef = useRef();
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const data = JSON.parse(user);
+      setUserId(data?.id);
+    }
+  }, []);
+
+  const fetchAppointmentsByDoc = async (doctorId) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const res = await fetch(`https://practo-backend.vercel.app/api/appointment/fetchbydoctor/${doctorId}`);
+      if (!res.ok) throw new Error('Failed to fetch appointments');
+      const response = await res.json();
+      
+      // Convert checked-in appointments to billing format
+      const checkedInBills = response.data
+        .filter(app => app.status === 'checkedIn')
+        .map(app => ({
+          id: `INV-${app._id.substring(0, 8).toUpperCase()}`,
+          patientName: app.patientName,
+          patientId: app._id,
+          date: new Date(app.appointmentDate).toISOString().split('T')[0],
+          dueDate: new Date(new Date(app.appointmentDate).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          amount: (app.medicines?.reduce((sum, med) => sum + (med.price || 0), 0) || 0) + (app.consultationFee || 0),
+          status: 'Pending', // Default status for new bills
+          insurance: app.insuranceProvider || 'Self-Pay',
+          services: [
+            { 
+              code: 'CONSULT', 
+              description: 'Consultation Fee', 
+              quantity: 1, 
+              price: app.consultationFee || 0 
+            },
+            ...(app.medicines?.map(med => ({
+              code: med.code || 'MED-' + med.name.substring(0, 3).toUpperCase(),
+              description: med.name,
+              quantity: med.quantity || 1,
+              price: med.price || 0
+            })) || [])
+          ]
+        }));
+      
+      setBills(checkedInBills);
+    } catch (err) {
+      setError(err.message);
+      console.error("Error fetching appointments:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchAppointmentsByDoc(userId);
+    }
+  }, [userId]);
 
   const filteredBills = bills.filter(bill => 
     bill.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -171,39 +171,12 @@ export default function DoctorBilling() {
               </div>
             </div>
           </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-gray-500 text-sm">Outstanding</p>
-                <p className="text-2xl font-bold text-red-600">
-                  ${bills.filter(b => b.status === 'Overdue').reduce((sum, b) => sum + b.amount, 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="bg-red-100 p-3 rounded-full">
-                <Calendar className="text-red-600" size={20} />
-              </div>
-            </div>
-          </div>
-          
-          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-gray-500 text-sm">Pending Claims</p>
-                <p className="text-2xl font-bold text-yellow-600">
-                  ${bills.filter(b => b.status === 'Pending').reduce((sum, b) => sum + b.amount, 0).toLocaleString()}
-                </p>
-              </div>
-              <div className="bg-yellow-100 p-3 rounded-full">
-                <Clock className="text-yellow-600" size={20} />
-              </div>
-            </div>
-          </div>
+
 
           <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-200">
             <div className="flex justify-between items-center">
               <div>
-                <p className="text-gray-500 text-sm">Patients Billed</p>
+                <p className="text-gray-500 text-sm">Total Patients</p>
                 <p className="text-2xl font-bold text-green-600">{bills.length}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
@@ -231,50 +204,70 @@ export default function DoctorBilling() {
           </button>
         </div>
 
-        <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-blue-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Bill #</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Patient</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Patient ID</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Date</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Insurance</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Amount</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Status</th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredBills.map((bill) => (
-                <tr key={bill.id} className="hover:bg-blue-50 transition-colors duration-150">
-                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{bill.id}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.patientName}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.patientId}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.date}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.insurance}</td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${bill.amount.toFixed(2)}</td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(bill.status)}`}>
-                      {bill.status}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    <button 
-                      onClick={() => openBillModal(bill)}
-                      className="text-blue-600 hover:text-blue-800 mr-3 transition-colors duration-200"
-                    >
-                      <Eye className="inline mr-1" size={16} /> View
-                    </button>
-                    <button className="text-gray-600 hover:text-gray-800 transition-colors duration-200">
-                      <Download className="inline" size={16} />
-                    </button>
-                  </td>
+        {isLoading && (
+          <div className="flex justify-center items-center p-12">
+            <Loader2 className="animate-spin text-blue-500 mr-2" size={24} />
+            <span>Loading billing data...</span>
+          </div>
+        )}
+
+        {error && (
+          <div className="p-6 text-center text-red-500 bg-red-50 rounded-lg">
+            Error: {error}
+          </div>
+        )}
+
+        {!isLoading && !error && bills.length === 0 && (
+          <div className="p-6 text-center text-gray-500 bg-gray-50 rounded-lg">
+            No checked-in patients found
+          </div>
+        )}
+
+        {!isLoading && !error && bills.length > 0 && (
+          <div className="overflow-x-auto rounded-xl shadow-sm border border-gray-100">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-blue-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Bill #</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Patient</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Patient ID</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Date</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-blue-600 uppercase tracking-wider">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredBills.map((bill) => (
+                  <tr key={bill.id} className="hover:bg-blue-50 transition-colors duration-150">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{bill.id}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.patientName}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.patientId}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{bill.date}</td>
+
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">${bill.amount.toFixed(2)}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(bill.status)}`}>
+                        {bill.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <button 
+                        onClick={() => openBillModal(bill)}
+                        className="text-blue-600 hover:text-blue-800 mr-3 transition-colors duration-200"
+                      >
+                        <Eye className="inline mr-1" size={16} /> View
+                      </button>
+                      <button className="text-gray-600 hover:text-gray-800 transition-colors duration-200">
+                        <Download className="inline" size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
       {/* Medical Bill Details Modal */}
