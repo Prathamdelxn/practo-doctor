@@ -1,17 +1,16 @@
 'use client'
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Dialog } from '@headlessui/react';
-import { Search, Plus, Edit, Trash2, Eye, Filter, Download, Calendar, Phone, Mail, MapPin, User, Shield, X } from 'lucide-react';
+import { Search, Plus, Edit, Trash2, Eye, Filter, Download, Calendar, Phone, Mail, MapPin, User, Shield, X, Pill } from 'lucide-react';
 
 const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formData, setFormData, handleSubmit }) => {
   const [modalSection, setModalSection] = useState('Personal Info');
 
-  const sections = ['Personal Info', 'Medical Info', 'Quick Actions'];
+  const sections = ['Personal Info', 'Prescriptions'];
   const sectionIcons = {
     'Personal Info': User,
-    'Medical Info': Shield,
-    'Quick Actions': Phone
+    'Prescriptions': Pill,
   };
 
   const getStatusColor = (status) => {
@@ -33,7 +32,7 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-2xl font-bold truncate max-w-[80%]">{selectedPatient.name}</h3>
-                  <p className="text-sm text-white/80 mt-1">Patient ID: #{selectedPatient.id || 'N/A'}</p>
+                  <p className="text-sm text-white/80 mt-1">Patient ID: #{selectedPatient._id?.substring(0, 8) || selectedPatient.id || 'N/A'}</p>
                 </div>
                 <button
                   onClick={closeModal}
@@ -52,7 +51,7 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
                   </div>
                   <div>
                     <p className="text-xs text-white/60">Age</p>
-                    <p className="font-medium">{selectedPatient.age} years</p>
+                    <p className="font-medium">{selectedPatient.age || 'N/A'} years</p>
                   </div>
                 </div>
                 <div className="flex items-center space-x-3">
@@ -104,25 +103,25 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <p className="text-xs text-blue-500 font-medium">Age & Gender</p>
-                        <p className="text-sm text-blue-900">{selectedPatient.age} years, {selectedPatient.gender}</p>
+                        <p className="text-sm text-blue-900">{selectedPatient.age || 'N/A'} years, {selectedPatient.gender || 'N/A'}</p>
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <p className="text-xs text-blue-500 font-medium">Blood Type</p>
-                        <p className="text-sm text-blue-900">{selectedPatient.bloodType}</p>
+                        <p className="text-sm text-blue-900">{selectedPatient.bloodType || 'N/A'}</p>
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <p className="text-xs text-blue-500 font-medium">Last Visit</p>
-                        <p className="text-sm text-blue-900">{selectedPatient.lastVisit}</p>
+                        <p className="text-sm text-blue-900">{selectedPatient.lastVisit || 'N/A'}</p>
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
                         <p className="text-xs text-blue-500 font-medium">Status</p>
                         <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedPatient.status)}`}>
-                          {selectedPatient.status}
+                          {selectedPatient.status || 'N/A'}
                         </span>
                       </div>
                       <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 md:col-span-2">
                         <p className="text-xs text-blue-500 font-medium">Address</p>
-                        <p className="text-sm text-blue-900">{selectedPatient.address}</p>
+                        <p className="text-sm text-blue-900">{selectedPatient.address || 'N/A'}</p>
                       </div>
                     </div>
 
@@ -136,14 +135,14 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
                           <Phone className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-xs font-medium text-blue-500">Phone</p>
-                            <p className="text-sm text-blue-900">{selectedPatient.phone}</p>
+                            <p className="text-sm text-blue-900">{selectedPatient.phone || 'N/A'}</p>
                           </div>
                         </div>
                         <div className="flex items-start gap-2">
                           <Mail className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
                           <div>
                             <p className="text-xs font-medium text-blue-500">Email</p>
-                            <p className="text-sm text-blue-900">{selectedPatient.email}</p>
+                            <p className="text-sm text-blue-900">{selectedPatient.email || 'N/A'}</p>
                           </div>
                         </div>
                       </div>
@@ -151,61 +150,69 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
                   </section>
                 )}
 
-                {/* Medical Info Section */}
-                {modalSection === 'Medical Info' && (
+                {/* Prescriptions Section */}
+                {modalSection === 'Prescriptions' && (
                   <section className="space-y-6">
                     <div className="flex items-center justify-between mb-6">
                       <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <Shield className="w-5 h-5 text-blue-600" />
-                        Medical Information
+                        <Pill className="w-5 h-5 text-blue-600" />
+                        Prescriptions
                       </h4>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <p className="text-xs text-blue-500 font-medium">Primary Condition</p>
-                        <p className="text-sm text-blue-900">{selectedPatient.condition}</p>
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                        <p className="text-xs text-blue-500 font-medium">Status</p>
-                        <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(selectedPatient.status)}`}>
-                          {selectedPatient.status}
-                        </span>
-                      </div>
-                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-100 md:col-span-2">
-                        <p className="text-xs text-blue-500 font-medium">Emergency Contact</p>
-                        <p className="text-sm text-blue-900">{selectedPatient.emergencyContact}</p>
-                      </div>
-                    </div>
-                  </section>
-                )}
+                    {selectedPatient.prescriptions?.length > 0 ? (
+                      <div className="space-y-4">
+                        {selectedPatient.prescriptions.map((prescription, index) => (
+                          <div key={index} className="bg-blue-50/30 p-5 rounded-xl border border-blue-100">
+                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                              <div>
+                                <p className="text-xs text-blue-500 font-medium">Date</p>
+                                <p className="text-sm text-blue-900">{prescription.date || 'N/A'}</p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-blue-500 font-medium">Doctor</p>
+                                <p className="text-sm text-blue-900">{prescription.doctor || 'N/A'}</p>
+                              </div>
+                            </div>
 
-                {/* Quick Actions Section */}
-                {modalSection === 'Quick Actions' && (
-                  <section className="space-y-6">
-                    <div className="flex items-center justify-between mb-6">
-                      <h4 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                        <Phone className="w-5 h-6 text-blue-600" />
-                        Quick Actions
-                      </h4>
-                    </div>
+                            <div className="mb-4">
+                              <p className="text-xs text-blue-500 font-medium mb-2">Medicines</p>
+                              <div className="space-y-3">
+                                {prescription.medicines?.map((medicine, medIndex) => (
+                                  <div key={medIndex} className="grid grid-cols-12 gap-3 bg-white p-3 rounded-lg border border-blue-100">
+                                    <div className="col-span-5">
+                                      <p className="text-sm font-medium text-gray-700">{medicine.name || 'N/A'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <p className="text-sm text-gray-700">{medicine.dosage || 'N/A'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <p className="text-sm text-gray-700">{medicine.frequency || 'N/A'}</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                      <p className="text-sm text-gray-700">{medicine.duration || 'N/A'}</p>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
 
-                    <div className="flex bg-blue-50 p-4 rounded-lg border border-blue-100">
-                      <div className="flex flex-wrap gap-2">
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-white text-blue-600 rounded-md border border-blue-200 hover:bg-blue-100 transition">
-                          <Phone className="w-3 h-3" />
-                          Call Patient
-                        </button>
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-white text-blue-600 rounded-md border border-blue-200 hover:bg-blue-100">
-                          <Mail className="w-3 h-3" />
-                          Send Email
-                        </button>
-                        <button className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium bg-white text-blue-600 rounded-md border border-blue-200 hover:bg-blue-100">
-                          <Calendar className="w-3 h-3" />
-                          Schedule Visit
-                        </button>
+                            {prescription.notes && (
+                              <div>
+                                <p className="text-xs text-blue-500 font-medium mb-1">Doctor's Notes</p>
+                                <p className="text-sm text-gray-700 bg-white p-3 rounded-lg border border-blue-100">
+                                  {prescription.notes}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    </div>
+                    ) : (
+                      <div className="bg-blue-50/30 p-5 rounded-xl border border-blue-100 text-center">
+                        <p className="text-gray-500">No prescriptions found for this patient</p>
+                      </div>
+                    )}
                   </section>
                 )}
               </div>
@@ -264,6 +271,7 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
                     <option value="">Select Gender</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
                 <div>
@@ -362,70 +370,13 @@ const PatientModal = ({ showModal, selectedPatient, closeModal, modalType, formD
 };
 
 const PatientManagementPage = () => {
-  const [patients, setPatients] = useState([
-    {
-      id: 1,
-      name: 'John Smith',
-      age: 45,
-      gender: 'Male',
-      phone: '+1-555-0123',
-      email: 'john.smith@email.com',
-      address: '123 Main St, New York, NY',
-      lastVisit: '2025-05-15',
-      condition: 'Hypertension',
-      status: 'Active',
-      bloodType: 'O+',
-      emergencyContact: 'Jane Smith - +1-555-0124'
-    },
-    {
-      id: 2,
-      name: 'Sarah Johnson',
-      age: 32,
-      gender: 'Female',
-      phone: '+1-555-0125',
-      email: 'sarah.j@email.com',
-      address: '456 Oak Ave, Los Angeles, CA',
-      lastVisit: '2025-05-20',
-      condition: 'Diabetes Type 2',
-      status: 'Active',
-      bloodType: 'A-',
-      emergencyContact: 'Mike Johnson - +1-555-0126'
-    },
-    {
-      id: 3,
-      name: 'Michael Brown',
-      age: 28,
-      gender: 'Male',
-      phone: '+1-555-0127',
-      email: 'mike.brown@email.com',
-      address: '789 Pine St, Chicago, IL',
-      lastVisit: '2025-04-30',
-      condition: 'Asthma',
-      status: 'Inactive',
-      bloodType: 'B+',
-      emergencyContact: 'Lisa Brown - +1-555-0128'
-    },
-    {
-      id: 4,
-      name: 'Emily Davis',
-      age: 55,
-      gender: 'Female',
-      phone: '+1-555-0129',
-      email: 'emily.davis@email.com',
-      address: '321 Elm St, Houston, TX',
-      lastVisit: '2025-05-25',
-      condition: 'Arthritis',
-      status: 'Active',
-      bloodType: 'AB+',
-      emergencyContact: 'Robert Davis - +1-555-0130'
-    }
-  ]);
-
+  const [patients, setPatients] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedPatient, setSelectedPatient] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState('view');
+  const [userId, setId] = useState('');
   const [formData, setFormData] = useState({
     name: '',
     age: '',
@@ -436,8 +387,65 @@ const PatientManagementPage = () => {
     condition: '',
     status: 'Active',
     bloodType: '',
-    emergencyContact: ''
+    emergencyContact: '',
+    prescriptions: []
   });
+
+  useEffect(() => {
+    const user = localStorage.getItem('user');
+    if (user) {
+      const data = JSON.parse(user);
+      setId(data?.id);
+    }
+  }, []);
+
+ 
+
+  const fetchAppointmentsByDoc = async (doctorId) => {
+    try {
+      const res = await fetch(`https://practo-backend.vercel.app/api/appointment/fetchbydoctor/${doctorId}`);
+      if (!res.ok) throw new Error('Failed to fetch appointments');
+      const response = await res.json();
+      const checkedInPatients = response.data
+        .filter(app => app.status === 'checkedIn')
+        .map(app => ({
+          _id: app._id,
+          id: app._id,
+          name: app.patientName,
+          age: app.patientAge || 0,
+          gender: app.patientDetails?.gender || 'Unknown',
+          phone: app.patientNumber,
+          email: app.patientEmail || 'No email',
+          address: app.patientAddress || 'No address',
+          lastVisit: new Date(app.appointmentDate).toLocaleDateString(),
+          condition: app.patientNote || 'No condition specified',
+          status: 'Active',
+          bloodType: app.patientDetails?.bloodType || 'Unknown',
+          emergencyContact: app.patientEmergencyContact || 'Not provided',
+          prescriptions: app.medicines ? [{
+            date: new Date(app.appointmentDate).toLocaleDateString(),
+            doctor: 'Dr. You',
+            medicines: app.medicines.map(med => ({
+              name: med.name || 'Unknown medicine',
+              dosage: med.dosage || 'As prescribed',
+              frequency: med.frequency || 'Daily',
+              duration: med.duration || 'Until finished'
+            })),
+            notes: app.description || 'No additional notes'
+          }] : []
+        }));
+      
+      setPatients(checkedInPatients);
+    } catch (error) {
+      console.error("Error fetching appointments:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchAppointmentsByDoc(userId);
+    }
+  }, [userId]);
 
   const filteredPatients = patients.filter(patient => {
     const matchesSearch = patient.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -447,9 +455,15 @@ const PatientManagementPage = () => {
     return matchesSearch && matchesFilter;
   });
 
-  const openModal = (type, patient = null) => {
+  const openModal = async (type, patient = null) => {
     setModalType(type);
-    if (patient) {
+    
+    if (type === 'view' && patient) {
+    
+        setSelectedPatient(patient);
+        setFormData({ ...patient });
+      
+    } else if (patient) {
       setSelectedPatient(patient);
       setFormData({ ...patient });
     } else {
@@ -463,7 +477,8 @@ const PatientManagementPage = () => {
         condition: '',
         status: 'Active',
         bloodType: '',
-        emergencyContact: ''
+        emergencyContact: '',
+        prescriptions: []
       });
     }
     setShowModal(true);
@@ -482,7 +497,8 @@ const PatientManagementPage = () => {
       condition: '',
       status: 'Active',
       bloodType: '',
-      emergencyContact: ''
+      emergencyContact: '',
+      prescriptions: []
     });
   };
 
@@ -495,19 +511,21 @@ const PatientManagementPage = () => {
     if (modalType === 'add') {
       const newPatient = {
         ...formData,
-        id: Math.max(...patients.map(p => p.id)) + 1,
-        lastVisit: new Date().toISOString().split('T')[0]
+        _id: Math.random().toString(36).substring(2, 11),
+        id: patients.length > 0 ? Math.max(...patients.map(p => parseInt(p.id))) + 1 : 1,
+        lastVisit: new Date().toLocaleDateString(),
+        prescriptions: []
       };
       setPatients([...patients, newPatient]);
     } else if (modalType === 'edit') {
-      setPatients(patients.map(p => p.id === selectedPatient.id ? { ...formData, id: selectedPatient.id } : p));
+      setPatients(patients.map(p => p._id === selectedPatient._id ? { ...formData } : p));
     }
     closeModal();
   };
 
   const deletePatient = (id) => {
     if (window.confirm('Are you sure you want to delete this patient?')) {
-      setPatients(patients.filter(p => p.id !== id));
+      setPatients(patients.filter(p => p._id !== id && p.id !== id));
     }
   };
 
@@ -609,7 +627,13 @@ const PatientManagementPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">This Month</p>
-                <p className="text-2xl font-bold text-purple-600">12</p>
+                <p className="text-2xl font-bold text-purple-600">
+                  {patients.filter(p => {
+                    const lastVisit = new Date(p.lastVisit);
+                    const now = new Date();
+                    return lastVisit.getMonth() === now.getMonth() && lastVisit.getFullYear() === now.getFullYear();
+                  }).length}
+                </p>
               </div>
               <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
                 <Calendar className="w-6 h-6 text-purple-600" />
@@ -635,9 +659,6 @@ const PatientManagementPage = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Last Visit
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Actions
                   </th>
@@ -645,39 +666,36 @@ const PatientManagementPage = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredPatients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-gray-50">
+                  <tr key={patient._id || patient.id} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                           <User className="w-5 h-5 text-blue-600" />
                         </div>
                         <div className="ml-4">
-                          <div className="text-sm font-medium text-gray-900">{patient.name}</div>
-                          <div className="text-sm text-gray-500">{patient.age}y, {patient.gender}</div>
+                          <div className="text-sm font-medium text-gray-900 capitalize">{patient.name}</div>
+                          <div className="text-sm text-gray-500">
+                             {patient.gender || 'N/A'}
+                          </div>
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 flex items-center gap-1">
                         <Phone className="w-4 h-4 text-gray-400" />
-                        {patient.phone}
+                        {patient.phone || 'N/A'}
                       </div>
                       <div className="text-sm text-gray-500 flex items-center gap-1">
                         <Mail className="w-4 h-4 text-gray-400" />
-                        {patient.email}
+                        {patient.email || 'N/A'}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{patient.condition}</div>
-                      <div className="text-sm text-gray-500">Blood: {patient.bloodType}</div>
+                    <td className="px-6 py-4 whitespace-nowrap capitalize">
+                      <div className="text-sm text-gray-900">{patient.condition || 'N/A'}</div>
+                      <div className="text-sm text-gray-500">Blood: {patient.bloodType || 'N/A'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {patient.lastVisit}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(patient.status)}`}>
-                        {patient.status}
-                      </span>
+                      {patient.lastVisit || 'N/A'}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex justify-end gap-2">
@@ -694,7 +712,7 @@ const PatientManagementPage = () => {
                           <Edit className="w-4 h-4" />
                         </button>
                         <button
-                          onClick={() => deletePatient(patient.id)}
+                          onClick={() => deletePatient(patient._id || patient.id)}
                           className="text-red-600 hover:text-red-900 p-1 hover:bg-red-50 rounded"
                         >
                           <Trash2 className="w-4 h-4" />
