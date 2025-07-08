@@ -25,7 +25,7 @@
 
 //       console.log('Fetching clinic with ID:', params.id)
       
-//       const res = await fetch(`http://localhost:3001/api/clinic/fetch-by-id/${params.id}`)
+//       const res = await fetch(`https://practo-backend.vercel.app/api/clinic/fetch-by-id/${params.id}`)
       
 //       if (!res.ok) {
 //         throw new Error(`Failed to fetch clinic data: ${res.status}`)

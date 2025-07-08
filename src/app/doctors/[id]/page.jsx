@@ -225,7 +225,7 @@
 
 //     console.log("Appointment Data:", appointmentData);
 
-//     const response = await fetch('http://localhost:3001/api/appointment/create', {
+//     const response = await fetch('https://practo-backend.vercel.app/api/appointment/create', {
 //       method: 'POST',
 //       headers: {
 //         'Content-Type': 'application/json',

@@ -59,7 +59,7 @@ console.log(userdata?.name);
     { name: 'Add Doctor', href: '/admin/doctors/add', icon: UserPlus },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
     { name: 'Clinics', href: '/admin/clinics-manage', icon: Activity },
-    { name: 'Settings', href: '/admin/settings', icon: Settings },
+    // { name: 'Settings', href: '/admin/settings', icon: Settings },
   ]
 
   return (

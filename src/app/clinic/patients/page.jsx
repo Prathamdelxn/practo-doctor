@@ -112,118 +112,27 @@ const medicationSchedule = [
 ];
 
 export default function PatientsPage() {
-  const [patients] = useState([
-    {
-      id: 1,
-      name: "John Smith",
-      email: "john@example.com",
-      phone: "9876543210",
-      dob: "1985-03-22",
-      gender: "Male",
-      address: "123 Main St, New York",
-      treatment: "Cardiology",
-      doctor: "Dr. Sarah Wilson",
-      prescription: "Take 1 aspirin daily",
-      tablets: ["Aspirin", "Metoprolol"],
-      date: "2024-05-15",
-      bloodType: "O+",
-      emergencyContact: {
-        name: "Jane Smith",
-        relation: "Spouse",
-        phone: "9876543211"
-      },
-      status: "In Progress",
-      notes: "Patient has history of hypertension"
-    },
-    {
-      id: 2,
-      name: "Sarah Johnson",
-      email: "sarah@example.com",
-      phone: "9012345678",
-      dob: "1990-06-12",
-      gender: "Female",
-      address: "456 Elm St, Boston",
-      treatment: "Gynecology",
-      doctor: "Dr. Maria Rodriguez",
-      prescription: "Take iron supplements daily",
-      tablets: ["Ferrous Sulfate", "Folic Acid"],
-      date: "2024-05-20",
-      bloodType: "A-",
-      emergencyContact: {
-        name: "Michael Johnson",
-        relation: "Brother",
-        phone: "9012345679"
-      },
-      status: "Completed",
-      notes: "Follow up in 6 months"
-    },
-    {
-      id: 3,
-      name: "Emily Wilson",
-      email: "emily@example.com",
-      phone: "9123456780",
-      dob: "1995-08-05",
-      gender: "Female",
-      address: "789 Oak St, Seattle",
-      treatment: "Orthopedics",
-      doctor: "Dr. Robert Chen",
-      prescription: "Knee physiotherapy and pain relievers",
-      tablets: ["Ibuprofen", "Glucosamine"],
-      date: "2024-05-18",
-      bloodType: "B+",
-      emergencyContact: {
-        name: "David Wilson",
-        relation: "Father",
-        phone: "9123456781"
-      },
-      status: "In Progress",
-      notes: "Physical therapy scheduled"
-    },
-    {
-      id: 4,
-      name: "David Lee",
-      email: "david@example.com",
-      phone: "9988776655",
-      dob: "1978-11-02",
-      gender: "Male",
-      address: "321 Pine St, Chicago",
-      treatment: "Neurology",
-      doctor: "Dr. Kevin Park",
-      prescription: "1 tablet of Gabapentin at night",
-      tablets: ["Gabapentin", "Paracetamol"],
-      date: "2024-05-22",
-      bloodType: "AB+",
-      emergencyContact: {
-        name: "Lisa Lee",
-        relation: "Wife",
-        phone: "9988776656"
-      },
-      status: "Pending",
-      notes: "Awaiting test results"
-    },
-    {
-      id: 5,
-      name: "Michael Brown",
-      email: "michael.brown@example.com",
-      phone: "9078563412",
-      dob: "1988-01-15",
-      gender: "Male",
-      address: "234 Maple Ave, San Francisco",
-      treatment: "Dermatology",
-      doctor: "Dr. Lisa Turner",
-      prescription: "Apply topical corticosteroid twice daily",
-      tablets: ["Hydrocortisone Cream", "Antihistamine"],
-      date: "2024-05-25",
-      bloodType: "O-",
-      emergencyContact: {
-        name: "Sarah Brown",
-        relation: "Sister",
-        phone: "9078563413"
-      },
-      status: "In Progress",
-      notes: "Allergy testing completed"
-    },
+const [clinicId,setId]=useState();
+ const [patients,setPatients] = useState([
   ]);
+ useEffect(() => {
+    const data = localStorage.getItem('user');
+    console.log("D", data);
+    const dum=JSON.parse(data);
+    setId(dum.id);
+  }, []);
+  useEffect(()=>{
+    const fetchPatients=async()=>{
+      const res= await fetch(`https://practo-backend.vercel.app/api/clinic/fetch-patients/${clinicId}`);
+      const data =await res.json();
+      console.log("sdf",data);
+      setPatients(data.data)
+    }
+    fetchPatients();
+  },[clinicId])
+
+  console.log(clinicId);
+ 
 
   const [searchTerm, setSearchTerm] = useState("");
   const [treatmentFilter, setTreatmentFilter] = useState("");
@@ -233,6 +142,8 @@ export default function PatientsPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const searchRef = useRef();
 
+
+ 
   const uniqueTreatments = useMemo(() => {
     return [...new Set(patients.map((p) => p.treatment))];
   }, [patients]);
@@ -259,13 +170,7 @@ export default function PatientsPage() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredPatients = useMemo(() => {
-    return patients.filter((p) =>
-      p.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-      p.treatment.toLowerCase().includes(treatmentFilter.toLowerCase()) &&
-      p.doctor.toLowerCase().includes(doctorFilter.toLowerCase())
-    );
-  }, [searchTerm, treatmentFilter, doctorFilter, patients]);
+  
 
   const sections = ["Personal Info", "Treatment", "Prescription", "Tablets List"];
 
@@ -307,69 +212,7 @@ export default function PatientsPage() {
         </div>
 
         {/* Search & Filters */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6" ref={searchRef}>
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-            <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
-              {/* Search */}
-              <div className="relative flex-1 max-w-md w-full">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                <input
-                  type="text"
-                  placeholder="Search patients, treatments, or doctors..."
-                  value={searchTerm}
-                  onChange={(e) => {
-                    setSearchTerm(e.target.value);
-                    setShowSuggestions(true);
-                  }}
-                  className="w-full pl-10 pr-4 py-2 border border-transparent bg-blue-100/50 focus:bg-blue-200 focus:border-blue-400 rounded-lg focus:ring-2 focus:ring-blue-400 transition"
-                />
-
-                {/* Suggestions Dropdown */}
-                {showSuggestions && suggestions.length > 0 && (
-                  <ul className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-b-xl shadow-lg max-h-48 overflow-auto text-sm scrollbar-thin">
-                    {suggestions.map((name, idx) => (
-                      <li
-                        key={idx}
-                        className="px-4 py-2 cursor-pointer hover:bg-blue-100"
-                        onClick={() => {
-                          setSearchTerm(name);
-                          setShowSuggestions(false);
-                        }}
-                      >
-                        {name}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-
-              {/* Filters */}
-              <div className="flex gap-3">
-                <select
-                  value={treatmentFilter}
-                  onChange={(e) => setTreatmentFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Treatments</option>
-                  {uniqueTreatments.map((t) => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                </select>
-
-                <select
-                  value={doctorFilter}
-                  onChange={(e) => setDoctorFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">All Doctors</option>
-                  {uniqueDoctors.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-        </div>
+ 
 
         {/* Table */}
         <div className="bg-white rounded-lg shadow-md overflow-x-auto">
@@ -377,41 +220,27 @@ export default function PatientsPage() {
             <thead className="bg-blue-100 text-blue-800">
               <tr>
                 <th className="text-left px-6 py-3">Name</th>
-                <th className="text-left px-6 py-3">Treatment</th>
-                <th className="text-left px-6 py-3">Doctor</th>
-                <th className="text-left px-6 py-3">Date</th>
-                <th className="text-left px-6 py-3">Actions</th>
+                <th className="text-left px-6 py-3">Gender</th>
+                <th className="text-left px-6 py-3">Phone Number</th>
+                <th className="text-left px-6 py-3">Email</th>
+                <th className="text-left px-6 py-3">Blood Type</th>
               </tr>
             </thead>
             <tbody>
-              {filteredPatients.map((p) => (
-                <tr key={p.id} className="hover:bg-blue-50 transition-colors">
-                  <td className="px-6 py-3 font-medium text-gray-800">{p.name}</td>
-                  <td className="px-6 py-3">{p.treatment}</td>
-                  <td className="px-6 py-3">{p.doctor}</td>
-                  <td className="px-6 py-3">{formatDate(p.date)}</td>
+              {patients.map((p,index) => (
+                <tr key={index} className="hover:bg-blue-50 transition-colors">
+                  <td className="px-6 py-3 font-medium text-gray-800">{p.firstName}</td>
+                  <td className="px-6 py-3">{p.gender}</td>
+                  <td className="px-6 py-3">{p.phone}</td>
+                  <td className="px-6 py-3">{p.email}</td>
                   <td className="px-6 py-3 flex gap-3">
-                    <button
-                      className="text-blue-600 hover:text-blue-800"
-                      onClick={() => {
-                        setSelectedPatient(p);
-                        setModalSection("Personal Info");
-                      }}
-                    >
-                      <Eye className="w-4 h-4" />
-                    </button>
-                    <button className="text-yellow-500 hover:text-yellow-600">
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button className="text-red-500 hover:text-red-600">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                   {p.bloodType}
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
-          {filteredPatients.length === 0 && (
+          {patients.length === 0 && (
             <div className="text-center text-gray-500 py-10">No patients found.</div>
           )}
         </div>

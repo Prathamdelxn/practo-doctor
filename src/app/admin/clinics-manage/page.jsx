@@ -1,12 +1,13 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { Pencil, Trash2, Plus,Search, ChevronDown, ChevronUp, Filter, X } from 'lucide-react'
+import { Pencil, Trash2, Plus, Search, ChevronDown, ChevronUp, Filter, X } from 'lucide-react'
 
 export default function ClinicsManage() {
   const [clinics, setClinics] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [sortConfig, setSortConfig] = useState({ key: 'name', direction: 'asc' })
+  const [sortConfig, setSortConfig] = useState({ key: 'clinicName', direction: 'asc' })
   const [filters, setFilters] = useState({
     status: 'all',
     location: 'all'
@@ -14,81 +15,36 @@ export default function ClinicsManage() {
   const [showFilters, setShowFilters] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [newClinic, setNewClinic] = useState({
-    name: '',
+    clinicName: '',
     address: '',
     city: '',
     phone: '',
     email: '',
-    status: 'active'
+    status: 'active',
+    clinicType: '',
+    specialties: []
   })
 
-  // Mock data - replace with your API call
   useEffect(() => {
     const fetchClinics = async () => {
       try {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 800))
-        const mockClinics = [
-          {
-            id: 1,
-            name: 'Downtown Medical Center',
-            address: '123 Main St',
-            city: 'New York',
-            phone: '(212) 555-1234',
-            email: 'contact@downtownmc.com',
-            doctors: 12,
-            status: 'active',
-            lastUpdated: '2023-05-15'
-          },
-          {
-            id: 2,
-            name: 'Green Valley Clinic',
-            address: '456 Oak Ave',
-            city: 'Chicago',
-            phone: '(312) 555-6789',
-            email: 'info@greenvalleyclinic.com',
-            doctors: 8,
-            status: 'active',
-            lastUpdated: '2023-06-22'
-          },
-          {
-            id: 3,
-            name: 'Sunrise Health Hub',
-            address: '789 Pine Rd',
-            city: 'Los Angeles',
-            phone: '(310) 555-3456',
-            email: 'admin@sunrisehub.org',
-            doctors: 5,
-            status: 'maintenance',
-            lastUpdated: '2023-04-10'
-          },
-          {
-            id: 4,
-            name: 'Coastal Wellness Center',
-            address: '101 Beach Blvd',
-            city: 'Miami',
-            phone: '(305) 555-7890',
-            email: 'support@coastalwellness.com',
-            doctors: 7,
-            status: 'active',
-            lastUpdated: '2023-07-05'
-          },
-          {
-            id: 5,
-            name: 'Mountain View Hospital',
-            address: '202 Hilltop Way',
-            city: 'Denver',
-            phone: '(303) 555-4567',
-            email: 'hello@mountainview.org',
-            doctors: 15,
-            status: 'active',
-            lastUpdated: '2023-03-18'
-          }
-        ]
-        setClinics(mockClinics)
-        setLoading(false)
-      } catch (error) {
-        console.error('Error fetching clinics:', error)
+        setLoading(true)
+        const res = await fetch('https://practo-backend.vercel.app/api/clinic/fetch-all-clinics')
+        
+        if (!res.ok) {
+          throw new Error('Failed to fetch clinics')
+        }
+
+        const data = await res.json()
+        if (data.success) {
+          setClinics(data.clinics)
+        } else {
+          throw new Error(data.message || 'Failed to fetch clinics')
+        }
+      } catch (err) {
+        console.error('Error:', err)
+        setError(err.message)
+      } finally {
         setLoading(false)
       }
     }
@@ -105,17 +61,21 @@ export default function ClinicsManage() {
   }
 
   const sortedClinics = [...clinics].sort((a, b) => {
-    if (a[sortConfig.key] < b[sortConfig.key]) {
+    // Handle nested objects and potential undefined values
+    const aValue = a[sortConfig.key] || ''
+    const bValue = b[sortConfig.key] || ''
+    
+    if (aValue < bValue) {
       return sortConfig.direction === 'asc' ? -1 : 1
     }
-    if (a[sortConfig.key] > b[sortConfig.key]) {
+    if (aValue > bValue) {
       return sortConfig.direction === 'asc' ? 1 : -1
     }
     return 0
   })
 
   const filteredClinics = sortedClinics.filter(clinic => {
-    const matchesSearch = clinic.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = clinic.clinicName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          clinic.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          clinic.phone.includes(searchTerm)
     
@@ -131,31 +91,71 @@ export default function ClinicsManage() {
     inactive: 'bg-red-100 text-red-800'
   }
 
-  const handleAddClinic = (e) => {
+  const handleAddClinic = async (e) => {
     e.preventDefault()
-    // Here you would typically make an API call to add the clinic
-    const newClinicWithId = {
-      ...newClinic,
-      id: clinics.length + 1,
-      doctors: 0,
-      lastUpdated: new Date().toISOString().split('T')[0]
+    try {
+      setLoading(true)
+      const res = await fetch('https://practo-backend.vercel.app/api/clinic/create-clinic', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newClinic)
+      })
+      
+      if (!res.ok) {
+        throw new Error('Failed to add clinic')
+      }
+
+      const data = await res.json()
+      if (data.success) {
+        setClinics([...clinics, data.clinic])
+        setShowAddModal(false)
+        setNewClinic({
+          clinicName: '',
+          address: '',
+          city: '',
+          phone: '',
+          email: '',
+          status: 'active',
+          clinicType: '',
+          specialties: []
+        })
+      } else {
+        throw new Error(data.message || 'Failed to add clinic')
+      }
+    } catch (err) {
+      console.error('Error:', err)
+      setError(err.message)
+    } finally {
+      setLoading(false)
     }
-    setClinics([...clinics, newClinicWithId])
-    setShowAddModal(false)
-    setNewClinic({
-      name: '',
-      address: '',
-      city: '',
-      phone: '',
-      email: '',
-      status: 'active'
-    })
   }
 
-  const handleDelete = (id) => {
-    // Confirm before deleting
+  const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this clinic?')) {
-      setClinics(clinics.filter(clinic => clinic.id !== id))
+      try {
+        setLoading(true)
+        const res = await fetch(`https://practo-backend.vercel.app/api/clinic/delete-clinic/${id}`, {
+          method: 'DELETE'
+        })
+        
+        if (!res.ok) {
+          throw new Error('Failed to delete clinic')
+        }
+
+        const data = await res.json()
+        if (data.success) {
+          setClinics(clinics.filter(clinic => clinic._id !== id))
+        } else {
+          throw new Error(data.message || 'Failed to delete clinic')
+        }
+      } catch (err) {
+        console.error('Error:', err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -175,6 +175,20 @@ export default function ClinicsManage() {
           Add Clinic
         </button>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <X className="h-5 w-5 text-red-500" />
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-700">{error}</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters and Search */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
@@ -263,11 +277,11 @@ export default function ClinicsManage() {
                   <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('name')}
+                    onClick={() => handleSort('clinicName')}
                   >
                     <div className="flex items-center">
                       Clinic Name
-                      {sortConfig.key === 'name' && (
+                      {sortConfig.key === 'clinicName' && (
                         sortConfig.direction === 'asc' ? (
                           <ChevronUp className="ml-1 h-4 w-4" />
                         ) : (
@@ -290,19 +304,9 @@ export default function ClinicsManage() {
                   </th>
                   <th
                     scope="col"
-                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer"
-                    onClick={() => handleSort('doctors')}
+                    className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
-                    <div className="flex items-center">
-                      Doctors
-                      {sortConfig.key === 'doctors' && (
-                        sortConfig.direction === 'asc' ? (
-                          <ChevronUp className="ml-1 h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="ml-1 h-4 w-4" />
-                        )
-                      )}
-                    </div>
+                    Type
                   </th>
                   <th
                     scope="col"
@@ -320,25 +324,25 @@ export default function ClinicsManage() {
                       )}
                     </div>
                   </th>
-                  <th
+                  {/* <th
                     scope="col"
                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
                   >
                     Actions
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredClinics.length > 0 ? (
                   filteredClinics.map((clinic) => (
-                    <tr key={clinic.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={clinic._id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 rounded-full bg-indigo-100 flex items-center justify-center">
-                            <span className="text-indigo-600 font-medium">{clinic.name.charAt(0)}</span>
+                            <span className="text-indigo-600 font-medium">{clinic.clinicName.charAt(0)}</span>
                           </div>
                           <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900">{clinic.name}</div>
+                            <div className="text-sm font-medium text-gray-900">{clinic.clinicName}</div>
                             <div className="text-sm text-gray-500">{clinic.address}</div>
                           </div>
                         </div>
@@ -351,26 +355,26 @@ export default function ClinicsManage() {
                         <div className="text-sm text-gray-500">{clinic.email}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{clinic.doctors}</div>
+                        <div className="text-sm text-gray-900">{clinic.clinicType}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[clinic.status]}`}>
-                          {clinic.status.charAt(0).toUpperCase() + clinic.status.slice(1)}
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClasses[clinic.status] || 'bg-gray-100 text-gray-800'}`}>
+                          {clinic.status?.charAt(0).toUpperCase() + clinic.status?.slice(1) || 'Unknown'}
                         </span>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         <div className="flex space-x-2">
                           <button className="text-indigo-600 hover:text-indigo-900">
                             <Pencil className="h-4 w-4" />
                           </button>
                           <button 
-                            onClick={() => handleDelete(clinic.id)}
+                            onClick={() => handleDelete(clinic._id)}
                             className="text-red-600 hover:text-red-900"
                           >
                             <Trash2 className="h-4 w-4" />
                           </button>
                         </div>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 ) : (
@@ -407,8 +411,8 @@ export default function ClinicsManage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Clinic Name</label>
                     <input
                       type="text"
-                      value={newClinic.name}
-                      onChange={(e) => setNewClinic({...newClinic, name: e.target.value})}
+                      value={newClinic.clinicName}
+                      onChange={(e) => setNewClinic({...newClinic, clinicName: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50"
                       required
                     />
@@ -455,6 +459,16 @@ export default function ClinicsManage() {
                       onChange={(e) => setNewClinic({...newClinic, email: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50"
                       required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Clinic Type</label>
+                    <input
+                      type="text"
+                      value={newClinic.clinicType}
+                      onChange={(e) => setNewClinic({...newClinic, clinicType: e.target.value})}
+                      className="w-full px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50"
                     />
                   </div>
                   
