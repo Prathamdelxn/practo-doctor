@@ -31,34 +31,63 @@ export default function ClinicsPage() {
   ]
 
   const [clinics, setClinics] = useState([])
+useEffect(() => {
+  const fetchClinics = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch('https://practo-backend.vercel.app/api/clinic/fetch-all-clinics');
 
-  useEffect(() => {
-    const fetchClinics = async () => {
-      try {
-        setLoading(true)
-        const res = await fetch('https://practo-backend.vercel.app/api/clinic/fetch-all-clinics')
-        
-        if (!res.ok) {
-          throw new Error('Failed to fetch clinics')
-        }
-
-        const data = await res.json()
-        if (data.success) {
-          setClinics(data.clinics)
-          setFilteredClinics(data.clinics)
-        } else {
-          throw new Error(data.message || 'Failed to fetch clinics')
-        }
-      } catch (err) {
-        console.error('Error:', err)
-        setError(err.message)
-      } finally {
-        setLoading(false)
+      if (!res.ok) {
+        throw new Error('Failed to fetch clinics');
       }
-    }
 
-    fetchClinics()
-  }, [])
+      const data = await res.json();
+      if (data.success) {
+        // Filter clinics where status is 'approved'
+        const approvedClinics = data.clinics.filter(clinic => clinic.status === 'active');
+        setClinics(approvedClinics);
+        setFilteredClinics(approvedClinics);
+      } else {
+        throw new Error(data.message || 'Failed to fetch clinics');
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchClinics();
+}, []);
+
+  // useEffect(() => {
+  //   const fetchClinics = async () => {
+  //     try {
+  //       setLoading(true)
+  //       const res = await fetch('https://practo-backend.vercel.app/api/clinic/fetch-all-clinics')
+        
+  //       if (!res.ok) {
+  //         throw new Error('Failed to fetch clinics')
+  //       }
+
+  //       const data = await res.json()
+  //       if (data.success) {
+  //         setClinics(data.clinics)
+  //         setFilteredClinics(data.clinics)
+  //       } else {
+  //         throw new Error(data.message || 'Failed to fetch clinics')
+  //       }
+  //     } catch (err) {
+  //       console.error('Error:', err)
+  //       setError(err.message)
+  //     } finally {
+  //       setLoading(false)
+  //     }
+  //   }
+
+  //   fetchClinics()
+  // }, [])
 
   useEffect(() => {
     if (searchQuery.trim() === '') {
@@ -311,7 +340,8 @@ export default function ClinicsPage() {
                           <div className="flex items-start">
                             <Clock className="h-5 w-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
                             <p className="text-gray-700">
-                              {formatOpeningHours(clinic)}
+                              {clinic.is24x7? '24x7 Availablity' :formatOpeningHours(clinic)}
+                            
                             </p>
                           </div>
                         </div>

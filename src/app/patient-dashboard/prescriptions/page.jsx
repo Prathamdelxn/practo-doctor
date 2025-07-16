@@ -48,7 +48,7 @@ import { useEffect, useState } from 'react';
 
 
 export default function PrescriptionsPage() {
-const [prescriptionData,setData]=useState([
+  const [prescriptionData, setData] = useState([
 
     {
 
@@ -138,127 +138,41 @@ const [prescriptionData,setData]=useState([
   const [selectedPrescription, setSelectedPrescription] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-const[userID,setId]=useState();
-useEffect(()=>{
-const userData=localStorage.getItem("user");
-const data=JSON.parse(userData);
-setId(data.id)
+  const [userID, setId] = useState();
+  useEffect(() => {
+    const userData = localStorage.getItem("user");
+    const data = JSON.parse(userData);
+    setId(data.id)
+    console.log(data);
 
-},[])
+  }, [])
 
-  const prescriptions = 
-  [
 
-    {
 
-      id: 1,
 
-      medication: 'Atorvastatin',
+  const fetchPrescriptions = async () => {
+    try {
 
-      dosage: '20mg',
+      const res = await fetch(`https://practo-backend.vercel.app/api/appointment/fetch-checkin-by-id/${userID}`);
+      const data = await res.json();
+      console.log("prescription data", data);
+      setData(data.data)
 
-      frequency: 'Once daily',
 
-      prescribedBy: 'Dr. Sarah Johnson',
+    } catch (err) {
 
-      date: '2023-05-15',
-
-      refills: 2,
-
-      status: 'Active',
-
-      type: 'Cholesterol',
-
-      lastFilled: '2023-06-10',
-
-      instructions: 'Take with food in the evening',
-
-      pharmacy: 'CVS Pharmacy #1234'
-
-    },
-
-    {
-
-      id: 2,
-
-      medication: 'Lisinopril',
-
-      dosage: '10mg',
-
-      frequency: 'Once daily',
-
-      prescribedBy: 'Dr. Michael Chen',
-
-      date: '2023-04-28',
-
-      refills: 0,
-
-      status: 'Completed',
-
-      type: 'Blood Pressure',
-
-      lastFilled: '2023-05-15',
-
-      instructions: 'Take in the morning with water',
-
-      pharmacy: 'Walgreens #5678'
-
-    },
-
-    {
-
-      id: 3,
-
-      medication: 'Metformin',
-
-      dosage: '500mg',
-
-      frequency: 'Twice daily',
-
-      prescribedBy: 'Dr. Emily Wilson',
-
-      date: '2023-06-01',
-
-      refills: 3,
-
-      status: 'Active',
-
-      type: 'Diabetes',
-
-      lastFilled: '2023-06-05',
-
-      instructions: 'Take with meals twice daily',
-
-      pharmacy: 'Rite Aid #9012'
+      console.log("Internal Server Error", err)
 
     }
-
-  ];
-
-
- const fetchPrescriptions=async()=>{
-  try{
-
-    const res=await fetch(`https://practo-backend.vercel.app/api/appointment/fetch-checkin-by-id/${userID}`);
-    const data = await res.json();
-    console.log("prescription data",data);
-    setData(data.data)
-
-
-  }catch(err){
-
-    console.log("Internal Server Error",err)
-
   }
- }
 
- useEffect(()=>{
-  fetchPrescriptions();
- },[])
+  useEffect(() => {
+    fetchPrescriptions();
+  }, [userID])
   const openModal = (prescription) => {
 
     setSelectedPrescription(prescription);
-console.log("properdata",prescription);
+    console.log("properdata", prescription);
 
     setIsModalOpen(true);
 
@@ -376,13 +290,13 @@ console.log("properdata",prescription);
 
                       <h3 className="text-2xl font-bold tracking-tight">
 
-                        {selectedPrescription.doctorName}
+                       Dr. {selectedPrescription.doctorName}
 
                       </h3>
 
                       <p className="text-blue-100 mt-1">
-  {selectedPrescription.doctorDetails.hospital}
-                       
+                        {selectedPrescription.doctorDetails.hospital}
+
 
                       </p>
 
@@ -403,8 +317,8 @@ console.log("properdata",prescription);
                     <div className="text-right">
 
                       <div className="text-xl font-bold">
-{selectedPrescription.appointmentDate}
-                       
+                        {selectedPrescription.appointmentDate}
+
 
                       </div>
 
@@ -502,7 +416,7 @@ console.log("properdata",prescription);
 
                       <tbody className="bg-white divide-y divide-gray-200">
 
-                        { selectedPrescription.medicines.map((medicine,index) => (
+                        {selectedPrescription.medicines.map((medicine, index) => (
 
                           <tr key={index} className="hover:bg-blue-50 transition-colors">
 
@@ -592,11 +506,11 @@ console.log("properdata",prescription);
 
                         <span className="w-1.5 h-1.5 bg-amber-500 rounded-full mt-1.5 mr-2 flex-shrink-0"></span>
 
-                        <span className='capitalize'><strong> {selectedPrescription.description }</strong> </span>
+                        <span className='capitalize'><strong> {selectedPrescription.description}</strong> </span>
 
                       </li>
 
-                    
+
 
                     </ul>
 
