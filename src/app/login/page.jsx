@@ -55,7 +55,17 @@ export default function LoginPage() {
             router.push('/doctor-dashboard');
             break;
           case 'clinic':
-            router.push('/clinic');
+           if(data.user.status=="pending"){
+        router.push(`/pending-request/${data.user.id}`);
+        
+      }else if(data.user.status=="rejected"){
+        router.push(`/rejected/${data.user.id}`);
+
+      }else{
+              router.push('/clinic');
+
+            }
+            
             break;
           case 'patient':
             router.push('/patient-dashboard');

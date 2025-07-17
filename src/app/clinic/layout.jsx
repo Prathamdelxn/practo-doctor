@@ -45,13 +45,13 @@ export default function ClinicLayout({ children }) {
       if (user.role !== "clinic") {
         router.push('/login');
       }
-      if(user.status=="pending"){
-        router.push(`/pending-request/${user.id}`);
+      // if(user.status=="pending"){
+      //   router.push(`/pending-request/${user.id}`);
         
-      }else if(user.status=="rejected"){
-        router.push(`/rejected/${user.id}`);
+      // }else if(user.status=="rejected"){
+      //   router.push(`/rejected/${user.id}`);
 
-      }
+      // }
     } catch (error) {
       console.error('Invalid user data in localStorage');
       router.push('/login');

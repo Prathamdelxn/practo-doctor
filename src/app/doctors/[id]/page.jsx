@@ -824,7 +824,7 @@ export default function DoctorDetailsPage() {
         
         if (!res.ok) {
           console.log('Specific endpoint failed, trying fetchAll...');
-          const allRes = await fetch('https://practo-backend.vercel.app/api/doctor/fetchAll');
+          const allRes = await fetch('http://localhost:3001/api/doctor/fetchAll');
           
           if (!allRes.ok) {
             throw new Error(`API request failed with status ${allRes.status}`);
@@ -893,9 +893,67 @@ export default function DoctorDetailsPage() {
     return availableDates;
   };
 
-  const generateTimeSlots = () => {
+//   const generateTimeSlots = () => {
+//   try {
+//     if (!doctor?.available?.time) return [];
+    
+//     const timeString = doctor.available.time || '9:00 AM to 5:00 PM';
+//     const [startStr, endStr] = timeString.split(' to ');
+    
+//     if (!startStr || !endStr) return [];
+    
+//     const parseTime = (timeStr) => {
+//       const time = timeStr.trim();
+//       const [timePart, period] = time.split(' ');
+//       const [hours, minutes] = timePart.split(':').map(Number);
+      
+//       let hour = hours;
+//       if (period === 'PM' && hour < 12) {
+//         hour += 12;
+//       } else if (period === 'AM' && hour === 12) {
+//         hour = 0;
+//       }
+      
+//       return { hour, minutes: minutes || 0 };
+//     };
+    
+//     const startTime = parseTime(startStr);
+//     const endTime = parseTime(endStr);
+    
+//     if (isNaN(startTime.hour)) return [];
+    
+//     const slots = [];
+//     let currentHour = startTime.hour;
+//     let currentMin = startTime.minutes;
+    
+//     while (
+//       currentHour < endTime.hour || 
+//       (currentHour === endTime.hour && currentMin <= endTime.minutes)
+//     ) {
+//       const displayHour = currentHour % 12 || 12;
+//       const ampm = currentHour < 12 || currentHour === 24 ? 'AM' : 'PM';
+//       const timeString = `${displayHour}:${currentMin.toString().padStart(2, '0')} ${ampm}`;
+      
+//       slots.push(timeString);
+      
+//       currentMin += 30;
+//       if (currentMin >= 60) {
+//         currentMin -= 60;
+//         currentHour += 1;
+//       }
+//     }
+    
+//     return slots;
+//   } catch (error) {
+//     console.error('Error generating time slots:', error);
+//     return [];
+//   }
+// };
+
+
+const generateTimeSlots = () => {
   try {
-    if (!doctor?.available?.time) return [];
+    if (!doctor?.available?.time || !doctor.sessionTime) return [];
     
     const timeString = doctor.available.time || '9:00 AM to 5:00 PM';
     const [startStr, endStr] = timeString.split(' to ');
@@ -925,6 +983,7 @@ export default function DoctorDetailsPage() {
     const slots = [];
     let currentHour = startTime.hour;
     let currentMin = startTime.minutes;
+    const sessionDuration = parseInt(doctor.sessionTime) || 30; // Default to 30 minutes if not set
     
     while (
       currentHour < endTime.hour || 
@@ -936,7 +995,8 @@ export default function DoctorDetailsPage() {
       
       slots.push(timeString);
       
-      currentMin += 30;
+      // Add the session duration to current time
+      currentMin += sessionDuration;
       if (currentMin >= 60) {
         currentMin -= 60;
         currentHour += 1;
@@ -949,7 +1009,6 @@ export default function DoctorDetailsPage() {
     return [];
   }
 };
-
   const timeSlots = generateTimeSlots();
 
   const handleBookClick = () => {

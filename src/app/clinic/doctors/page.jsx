@@ -38,7 +38,7 @@ export default function DoctorsPage() {
   const [activeFilter, setActiveFilter] = useState('All');
   const [isLoading, setIsLoading] = useState(true);
 
-  const filters = ['All', 'Active', 'On Leave', 'Cardiologist', 'Dermatologist'];
+  const filters = ['All', 'Cardiologist', 'Dermatologist'];
 
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
@@ -169,13 +169,7 @@ export default function DoctorsPage() {
             />
           </div>
           <div className="relative">
-            <button 
-              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 px-4 py-2.5 rounded-lg hover:bg-gray-50 w-full md:w-auto"
-              onClick={() => setActiveFilter('All')}
-            >
-              <Filter className="w-5 h-5" />
-              <span>Filters</span>
-            </button>
+           
             <div className="absolute mt-1 w-full bg-white rounded-lg shadow-lg z-10 border border-gray-200 hidden">
               {filters.map(filter => (
                 <button
@@ -191,17 +185,7 @@ export default function DoctorsPage() {
         </div>
         
         {/* Filter Chips */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {filters.map(filter => (
-            <button
-              key={filter}
-              className={`px-3 py-1 text-sm rounded-full border transition-colors ${activeFilter === filter ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'}`}
-              onClick={() => setActiveFilter(filter)}
-            >
-              {filter}
-            </button>
-          ))}
-        </div>
+        
       </div>
 
       {/* Doctor List */}

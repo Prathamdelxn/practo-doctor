@@ -84,6 +84,31 @@ const [clinicRegistrationSuccess, setClinicRegistrationSuccess] = useState(false
 const [clinicErrors, setClinicErrors] = useState({});
 const clinicFileInputRef = useRef(null);
   // Patient form state
+
+  const checkEmailAvailability = async (email) => {
+  try {
+    const response = await fetch('http://localhost:3001/api/check-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Network response was not ok');
+    }
+
+    const data = await response.json();
+    if (!data.available) {
+      return `This email is already registered as a ${data.existsIn}`;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error checking email:', error);
+    return 'Error checking email availability';
+  }
+};
   const [patientFormData, setPatientFormData] = useState({
     firstName: '',
     lastName: '',
@@ -1132,23 +1157,37 @@ const renderClinicStepContent = () => {
                 )}
               </div>
               
-              <div>
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={clinicFormData.email}
-                  onChange={handleClinicInputChange}
-                  className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${clinicErrors.email ? 'border-red-500' : 'border-gray-200'}`}
-                  placeholder="contact@clinic.com"
-                />
-                {clinicErrors.email && (
-                  <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.email}</p>
-                )}
-              </div>
+              <div className="group">
+  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
+    Email <span className="text-red-500">*</span>
+  </label>
+  <input
+    type="email"
+    id="email"
+    name="email"
+    value={clinicFormData.email}
+    onChange={async (e) => {
+      const email = e.target.value;
+      handleClinicInputChange(e);
+      
+      // Check email availability only if it's a valid email format
+      if (/^\S+@\S+\.\S+$/.test(email)) {
+        const errorMessage = await checkEmailAvailability(email);
+        setClinicErrors(prev => ({
+          ...prev,
+          email: errorMessage || ''
+        }));
+      }
+    }}
+    className={`w-full px-4 py-3 bg-white border-2 rounded-xl transition-all duration-300 focus:ring-4 focus:ring-green-100 focus:border-green-500 hover:border-green-300 ${
+      clinicErrors.email ? 'border-red-500' : 'border-gray-200'
+    }`}
+    placeholder="contact@clinic.com"
+  />
+  {clinicErrors.email && (
+    <p className="mt-2 text-sm text-red-600 animate-shake">{clinicErrors.email}</p>
+  )}
+</div>
               
               <div>
                 <label htmlFor="website" className="block text-sm font-semibold text-gray-700 mb-2">

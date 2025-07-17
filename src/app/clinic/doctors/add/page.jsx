@@ -27,6 +27,7 @@ export default function AddDoctorPage() {
     clinicId: '',
     hospital: '',
     hospitalAddress: '',
+    sessionTime:'',
     hospitalNumber: '',
     // Changed to match API expectations
     availableDays: [],
@@ -194,23 +195,26 @@ export default function AddDoctorPage() {
       };
     });
   };
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  if (currentStep !== 3) {
+    return;
+  }
 
-    if (currentStep !== 3) {
-      return;
-    }
-
-    try {
-      // Prepare data for API - remove UI-only fields
-      const { timeSlots, ...apiData } = formData;
-      
-      console.log('Submitting data:', apiData);
-      
-      const response = await axios.post('https://practo-backend.vercel.app/api/clinic/doctor-add', apiData);
-      console.log('Success: Register');
-      alert("Doctor Added Successfully");
+  try {
+    setIsSubmitting(true);
+    const { timeSlots, ...apiData } = formData;
+    
+    console.log('Submitting data:', apiData);
+    
+    const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', apiData);
+    
+    // Axios puts the response data in response.data
+    console.log('Response:', response.data);
+    
+    if (response.status === 201) {
+      alert(response.data.message || "Doctor Added Successfully");
       
       // Reset form
       setFormData({
@@ -226,13 +230,14 @@ export default function AddDoctorPage() {
         supSpeciality: '',
         licenseNumber: '',
         experience: '',
+        sessionTime: '',
         consultantFee: '',
         qualifications: [''],
         clinicId: formData.clinicId,
         hospital: formData.hospital,
         hospitalAddress: formData.hospitalAddress,
         hospitalNumber: formData.hospitalNumber,
-        city:formData.city,
+        city: formData.city,
         homeAddress: '',
         availableDays: [],
         availableTime: "9:00 AM to 5:00 PM",
@@ -245,11 +250,74 @@ export default function AddDoctorPage() {
       
       Router.refresh();
       Router.push("/clinic/doctors");
-    } catch (err) {
-      console.log('Error:', err.response?.data?.message || 'Registration failed');
-      alert(err.response?.data?.message || 'Registration failed');
+    } else {
+      throw new Error(response.data.message || 'Registration failed');
     }
-  };
+  } catch (err) {
+    console.error('Error:', err.response?.data?.message || err.message);
+    alert(err.response?.data?.message || err.message || 'Registration failed');
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (currentStep !== 3) {
+  //     return;
+  //   }
+
+  //   try {
+  //     // Prepare data for API - remove UI-only fields
+  //     const { timeSlots, ...apiData } = formData;
+      
+  //     console.log('Submitting data:', apiData);
+      
+  //      const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', apiData);
+  //      const datt=await response.json();
+  //      console.log(datt);
+  //     console.log('Success: Register');
+  //     alert("Doctor Added Successfully");
+      
+  //     // Reset form
+  //     setFormData({
+  //       firstName: '',
+  //       lastName: '',
+  //       profileImage: '',
+  //       dateOfBirth: '',
+  //       gender: '',
+  //       email: '',
+  //       password: '',
+  //       phone: '',
+  //       specialty: '',
+  //       supSpeciality: '',
+  //       licenseNumber: '',
+  //       experience: '',
+  //       sessionTime:'',
+  //       consultantFee: '',
+  //       qualifications: [''],
+  //       clinicId: formData.clinicId,
+  //       hospital: formData.hospital,
+  //       hospitalAddress: formData.hospitalAddress,
+  //       hospitalNumber: formData.hospitalNumber,
+  //       city:formData.city,
+  //       homeAddress: '',
+  //       availableDays: [],
+  //       availableTime: "9:00 AM to 5:00 PM",
+  //       timeSlots: {
+  //         from: { hour: '9', minute: '00', period: 'AM' },
+  //         to: { hour: '5', minute: '00', period: 'PM' }
+  //       }
+  //     });
+  //     setCurrentStep(1);
+      
+  //     Router.refresh();
+  //     Router.push("/clinic/doctors");
+  //   } catch (err) {
+  //     console.log('Error:', err.response?.data?.message || 'Registration failed');
+  //     alert(err.response?.data?.message || 'Registration failed');
+  //   }
+  // };
 
   const nextStep = (e) => {
     e.preventDefault();
@@ -649,7 +717,22 @@ export default function AddDoctorPage() {
                     required
                   />
                 </div>
-
+<div className="space-y-2">
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    <Clock className="inline w-4 h-4 mr-2" />
+    Session Time (minutes)
+  </label>
+  <input
+    type="number"
+    name="sessionTime"
+    value={formData.sessionTime}
+    onChange={handleInputChange}
+    className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
+    placeholder="e.g., 30"
+    min="1"
+    required
+  />
+</div>
                 <div className="space-y-4">
                   <label className="block text-sm font-semibold text-gray-700">
                     <Clock className="inline w-4 h-4 mr-2" />

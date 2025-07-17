@@ -29,6 +29,7 @@ export default function AddDoctorPage() {
     gender: '',
     qualification: '',
     licenseNumber: '',
+    
     department: '',
     emergencyContact: '',
     emergencyPhone: '',
