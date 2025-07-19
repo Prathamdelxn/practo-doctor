@@ -83,6 +83,8 @@ export default function RegistrationPortal() {
   const [isClinicSubmitting, setIsClinicSubmitting] = useState(false);
   const [clinicRegistrationSuccess, setClinicRegistrationSuccess] = useState(false);
   const [clinicErrors, setClinicErrors] = useState({});
+  const [patientErrors, setPatientErrors] = useState({});
+
   const clinicFileInputRef = useRef(null);
   // Patient form state
 
@@ -102,7 +104,7 @@ export default function RegistrationPortal() {
 
       const data = await response.json();
       if (!data.available) {
-        return `This email is already registered as a ${data.existsIn}`;
+        return `This email is already registered `;
       }
       return null;
     } catch (error) {
@@ -2828,7 +2830,7 @@ const handleDoctorInputChange = (field, value) => {
                           </div>
                         </div>
 
-                        <div>
+                        {/* <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Email*</label>
                           <div className="relative">
                             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -2851,8 +2853,43 @@ const handleDoctorInputChange = (field, value) => {
                               {doctorErrors.email}
                             </p>
                           )}
-                        </div>
-
+                        </div> */}
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-2">Email*</label>
+  <div className="relative">
+    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+      <FiMail className="h-5 w-5 text-gray-400" />
+    </div>
+    <input
+      type="email"
+      value={doctorFormData.email}
+      onChange={async (e) => {
+        const email = e.target.value;
+        handleDoctorInputChange('email', email);
+        
+        // Check email availability only if it's a valid email format
+        if (/^\S+@\S+\.\S+$/.test(email)) {
+          const errorMessage = await checkEmailAvailability(email);
+          setDoctorErrors(prev => ({
+            ...prev,
+            email: errorMessage || ''
+          }));
+        }
+      }}
+      className={`pl-10 w-full rounded-lg border ${doctorErrors.email ? 'border-red-300' : 'border-gray-200'} focus:border-indigo-500 focus:ring-indigo-500 py-3`}
+      placeholder="your@email.com"
+      disabled={isDoctorSubmitting}
+    />
+  </div>
+  {doctorErrors.email && (
+    <p className="text-red-500 text-xs mt-1 flex items-center">
+      <svg className="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      {doctorErrors.email}
+    </p>
+  )}
+</div>
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number*</label>
                           <div className="relative">

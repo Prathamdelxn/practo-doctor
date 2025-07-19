@@ -43,6 +43,7 @@ const identityProofRef = useRef(null);
       to: { hour: '5', minute: '00', period: 'PM' }
     }
   });
+    const [clinicErrors, setClinicErrors] = useState({});
 
   const [showPassword, setShowPassword] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
@@ -228,6 +229,53 @@ const handleIdentityProofChange = async (e) => {
       };
     });
   };
+  const checkEmailAvailability = async (email) => {
+  if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    return 'Please enter a valid email address';
+  }
+
+  try {
+    const response = await axios.post('https://practo-backend.vercel.app/api/check-email', { 
+      email 
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+
+    if (!response.data.available) {
+      return `This email is already registered as a ${response.data.existsIn}`;
+    }
+    return '';
+  } catch (error) {
+    console.error('Error checking email:', error);
+    return 'Error checking email availability. Please try again.';
+  }
+};
+  //  const checkEmailAvailability = async (email) => {
+  //   try {
+  //     const response = await fetch('http://localhost:3001/api/check-email', {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //       },
+  //       body: JSON.stringify({ email }),
+  //     });
+
+  //     if (!response.ok) {
+  //       throw new Error('Network response was not ok');
+  //     }
+
+  //     const data = await response.json();
+  //     if (!data.available) {
+  //       return `This email is already registered as a ${data.existsIn}`;
+  //     }
+  //     return null;
+  //   } catch (error) {
+  //     console.error('Error checking email:', error);
+  //     return 'Error checking email availability';
+  //   }
+  // };
 const handleSubmit = async (e) => {
   e.preventDefault();
 
@@ -356,11 +404,24 @@ const apiData = {
   //     alert(err.response?.data?.message || 'Registration failed');
   //   }
   // };
-
-  const nextStep = (e) => {
-    e.preventDefault();
-    if (currentStep < 3) setCurrentStep(currentStep + 1);
-  };
+const nextStep = async (e) => {
+  e.preventDefault();
+  
+  // Validate email if we're on step 1
+  if (currentStep === 1 && formData.email) {
+    const emailError = await checkEmailAvailability(formData.email);
+    if (emailError) {
+      setErrors(prev => ({ ...prev, email: emailError }));
+      return; // Don't proceed if email is invalid or taken
+    }
+  }
+  
+  if (currentStep < 3) setCurrentStep(currentStep + 1);
+};
+  // const nextStep = (e) => {
+  //   e.preventDefault();
+  //   if (currentStep < 3) setCurrentStep(currentStep + 1);
+  // };
 
   const prevStep = () => {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
@@ -509,7 +570,7 @@ const apiData = {
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-2">
+                  {/* <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       <Mail className="inline w-4 h-4 mr-2" />
                       Email Address
@@ -518,13 +579,68 @@ const apiData = {
                       type="email"
                       name="email"
                       value={formData.email}
-                      onChange={handleInputChange}
+                      // onChange={handleInputChange}
+                       onChange={async (e) => {
+                    const email = e.target.value;
+                    handleInputChange(e);
+
+                    // Check email availability only if it's a valid email format
+                    if (/^\S+@\S+\.\S+$/.test(email)) {
+                      const errorMessage = await checkEmailAvailability(email);
+                      setClinicErrors(prev => ({
+                        ...prev,
+                        email: errorMessage || ''
+                      }));
+                    }
+                  }}
                       className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none"
                       placeholder="doctor@example.com"
                       required
                     />
-                  </div>
-                  
+                  </div> */}
+                  <div className="space-y-2">
+  <label className="block text-sm font-semibold text-gray-700 mb-2">
+    <Mail className="inline w-4 h-4 mr-2" />
+    Email Address
+  </label>
+  <input
+    type="email"
+    name="email"
+    value={formData.email}
+    onChange={async (e) => {
+      const email = e.target.value;
+      handleInputChange(e);
+      
+      // Clear previous errors
+      setErrors(prev => ({ ...prev, email: '' }));
+      
+      // Only validate if it looks like an email
+      if (email && /^\S+@\S+\.\S+$/.test(email)) {
+        const errorMessage = await checkEmailAvailability(email);
+        if (errorMessage) {
+          setErrors(prev => ({ ...prev, email: errorMessage }));
+        }
+      }
+    }}
+    onBlur={async (e) => {
+      // Validate again on blur to ensure we catch any missed validations
+      if (e.target.value && !errors.email) {
+        const errorMessage = await checkEmailAvailability(e.target.value);
+        if (errorMessage) {
+          setErrors(prev => ({ ...prev, email: errorMessage }));
+        }
+      }
+    }}
+    className={`w-full px-4 py-3 rounded-xl border ${
+      errors.email ? 'border-red-500' : 'border-gray-200'
+    } focus:border-purple-500 focus:ring-2 focus:ring-purple-200 transition-all outline-none`}
+    placeholder="doctor@example.com"
+    required
+  />
+  {errors.email && (
+    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+  )}
+</div>
                   <div className="space-y-2">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       <Phone className="inline w-4 h-4 mr-2" />

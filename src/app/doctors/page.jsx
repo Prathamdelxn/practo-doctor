@@ -42,8 +42,10 @@ export default function FindDoctorsPage() {
       setIsLoading(true);
       const res = await fetch("https://practo-backend.vercel.app/api/doctor/fetchAll");
       const data = await res.json();
-      setDoctors(data.doctors);
-      setFilteredDoctors(data.doctors);
+      const activeDoctors = data.doctors.filter((doctor) => doctor.status === 'active');
+    
+    setDoctors(activeDoctors);
+    setFilteredDoctors(activeDoctors);
     } catch (err) {
       console.log("Internal Server Error", err);
     } finally {

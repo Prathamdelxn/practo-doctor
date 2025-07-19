@@ -51,7 +51,7 @@ const handleSubmit = async (e) => {
 
       console.log('Submitting data:', submissionData);
 
-      const response = await fetch('https://localhost:3001/api/patients/register', {
+      const response = await fetch('https://practo-backend.vercel.app/api/patients/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
