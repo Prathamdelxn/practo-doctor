@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation';
 
 export default function AddDoctorPage() {
   const Router = useRouter();
+  const degreeCertRef = useRef(null);
+const identityProofRef = useRef(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -22,6 +24,8 @@ export default function AddDoctorPage() {
     licenseNumber: '',
     experience: '',
     consultantFee: '',
+     degreeCertificate: '',
+  identityProof: '',
     city:'',
     qualifications: [''],
     clinicId: '',
@@ -29,6 +33,7 @@ export default function AddDoctorPage() {
     hospitalAddress: '',
     sessionTime:'',
     hospitalNumber: '',
+    status:'active',
     // Changed to match API expectations
     availableDays: [],
     availableTime: "9:00 AM to 5:00 PM",
@@ -101,7 +106,35 @@ export default function AddDoctorPage() {
       qualifications: newQualifications
     }));
   };
+const handleDegreeCertificateChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
+  try {
+    setIsSubmitting(true);
+    const cloudinaryUrl = await uploadImageToCloudinary(file);
+    setFormData(prev => ({ ...prev, degreeCertificate: cloudinaryUrl }));
+  } catch (error) {
+    console.error('Error uploading degree certificate:', error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+const handleIdentityProofChange = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  try {
+    setIsSubmitting(true);
+    const cloudinaryUrl = await uploadImageToCloudinary(file);
+    setFormData(prev => ({ ...prev, identityProof: cloudinaryUrl }));
+  } catch (error) {
+    console.error('Error uploading identity proof:', error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
   const addQualification = () => {
     setFormData(prev => ({
       ...prev,
@@ -204,11 +237,14 @@ const handleSubmit = async (e) => {
 
   try {
     setIsSubmitting(true);
-    const { timeSlots, ...apiData } = formData;
-    
+   const { timeSlots, ...rest } = formData;
+const apiData = {
+  ...rest,
+  status: formData.status
+};
     console.log('Submitting data:', apiData);
     
-    const response = await axios.post('http://localhost:3001/api/clinic/doctor-add', apiData);
+     const response = await axios.post('https://practo-backend.vercel.app/api/clinic/doctor-add', apiData);
     
     // Axios puts the response data in response.data
     console.log('Response:', response.data);
@@ -232,6 +268,8 @@ const handleSubmit = async (e) => {
         experience: '',
         sessionTime: '',
         consultantFee: '',
+         degreeCertificate: '',
+  identityProof: '',
         qualifications: [''],
         clinicId: formData.clinicId,
         hospital: formData.hospital,
@@ -616,6 +654,66 @@ const handleSubmit = async (e) => {
                     />
                   </div>
                 </div>
+                 <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <Award className="inline w-4 h-4 mr-2" />
+        Degree Certificate
+      </label>
+      <input
+        type="file"
+        onChange={handleDegreeCertificateChange}
+        accept="image/*,.pdf"
+        className="hidden"
+        id="degreeCertificate"
+        ref={degreeCertRef}
+      />
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => degreeCertRef.current.click()}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+        >
+          Upload Degree Certificate
+        </button>
+        {formData.degreeCertificate && (
+          <span className="text-sm text-green-600">
+            ✓ Certificate uploaded
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500">Upload a clear scan of your medical degree certificate (JPG, PNG)</p>
+    </div>
+
+    {/* Identity Proof Upload */}
+    <div className="space-y-2">
+      <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <User className="inline w-4 h-4 mr-2" />
+        Identity Proof
+      </label>
+      <input
+        type="file"
+        onChange={handleIdentityProofChange}
+        accept="image/*,.pdf"
+        className="hidden"
+        id="identityProof"
+        ref={identityProofRef}
+      />
+      <div className="flex items-center gap-4">
+        <button
+          type="button"
+          onClick={() => identityProofRef.current.click()}
+          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+        >
+          Upload Identity Proof
+        </button>
+        {formData.identityProof && (
+          <span className="text-sm text-green-600">
+            ✓ Identity proof uploaded
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-gray-500">Upload a government-issued ID (Driving License, Passport, etc.)</p>
+    </div>
 
                 <div className="space-y-4">
                   <label className="block text-sm font-semibold text-gray-700">

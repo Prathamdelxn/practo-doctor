@@ -314,14 +314,14 @@ export default function FindDoctorsPage() {
                   <span className="text-gray-500 text-lg font-normal ml-2">({filteredDoctors.length} found)</span>
                 )}
               </h2>
-              <div className="flex items-center">
+              {/* <div className="flex items-center">
                 <span className="text-sm text-gray-600 mr-2">Sort by:</span>
                 <select className="border border-gray-300 rounded-md p-2 text-sm bg-white">
                   <option>Relevance</option>
                   <option>Experience (High to Low)</option>
                   <option>Fee (Low to High)</option>
                 </select>
-              </div>
+              </div> */}
             </motion.div>
 
             {isLoading ? (
